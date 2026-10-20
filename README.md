@@ -113,3 +113,68 @@ Não estão incluídos `.env` da operação, handoffs internos, roteiro/seed esp
 MIT para código de titularidade autorizada, com declaração ISC do servidor e licenças/atribuições de Pixel Agents e MetroCity preservadas. Consulte `LICENSE`, `LICENSES` e `THIRD_PARTY_NOTICES.md`.
 
 As alterações úteis da cópia local de tarefas, workspaces, provedores e correção de código foram incorporadas. Branches experimentais não foram fundidas automaticamente. Credenciais devem continuar em arquivos ignorados; somente o template `.env.example` é distribuído.
+
+
+<!-- community-core:room-occupancy-descriptor -->
+### Room Occupancy Descriptor for Pixel Office Tiles
+
+Provides a small deterministic helper to describe pixel-office room occupancy from synthetic configuredSlots and occupants counts, letting the open edition render capacity badges consistently without reading titles, calling backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/room_occupancy_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function describeRoomOccupancy(input) with no I/O, env, time, randomness, callbacks, or dependencies. Input must be a plain object with integer configuredSlots 0..10000 and integer occupants 0..10000; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, non-integers, out-of-range or non-finite values throws TypeError('INVALID_ROOM_OCCUPANCY_INPUT') without echoing input. On valid synthetic input return a fresh object with configuredSlots, occupants, freeSlots, empty, full, overfilled where freeSlots is configuredSlots minus occupants clamped to 0, empty is occupants equals 0, full is configuredSlots above 0 and occupants at or above configuredSlots, and overfilled is occupants above configuredSlots. Computation is literal and makes no inference about teams, roles, progress, or next steps and never contacts backend or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "configuredSlots": 4,
+    "occupants": 0
+  },
+  "output": {
+    "configuredSlots": 4,
+    "empty": true,
+    "freeSlots": 4,
+    "full": false,
+    "occupants": 0,
+    "overfilled": false
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "configuredSlots": 4,
+    "occupants": 4
+  },
+  "output": {
+    "configuredSlots": 4,
+    "empty": false,
+    "freeSlots": 0,
+    "full": true,
+    "occupants": 4,
+    "overfilled": false
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "configuredSlots": 2,
+    "occupants": 5
+  },
+  "output": {
+    "configuredSlots": 2,
+    "empty": false,
+    "freeSlots": 0,
+    "full": true,
+    "occupants": 5,
+    "overfilled": true
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_room_occupancy_descriptor.test.mjs`.
