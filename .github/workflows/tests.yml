@@ -1,0 +1,35 @@
+name: Offline application checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  node-checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - scope: server
+            package: server
+          - scope: web
+            package: web-v2
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+      - name: Install isolation runtime
+        run: sudo apt-get update -qq && sudo apt-get install -y bubblewrap
+      - name: Install dependency packages without lifecycle scripts
+        working-directory: ${{ matrix.package }}
+        run: npm ci --ignore-scripts --registry=https://registry.npmjs.org --no-audit --no-fund
+      - name: Test, check and build offline
+        run: python3 scripts/checks-offline.py "${{ matrix.scope }}" --node "$(command -v node)" --dependencies "$GITHUB_WORKSPACE/${{ matrix.package }}/node_modules"

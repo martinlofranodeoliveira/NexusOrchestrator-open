@@ -1,0 +1,159 @@
+.meeting-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 400px;
+  height: 100vh;
+  background-color: #0c0c0c;
+  border-right: 4px solid #333;
+  box-shadow: 8px 0 15px rgba(0, 255, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  font-family: 'Courier New', Courier, monospace;
+  color: #0f0;
+  z-index: 1000;
+  transform: translateX(0);
+  transition: transform 0.3s ease-in-out;
+}
+
+.meeting-modal {
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.meeting-header {
+  background-color: #222;
+  border-bottom: 2px solid #333;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.meeting-title {
+  font-weight: bold;
+  font-size: 16px;
+  color: #ccc;
+  text-shadow: 1px 1px 0 #000;
+}
+
+.meeting-close {
+  background: none;
+  border: none;
+  color: #f55;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: none;
+  font-size: 18px;
+}
+
+.meeting-close:hover {
+  color: #f00;
+  transform: none;
+  box-shadow: none;
+}
+
+.meeting-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  flex: 1;
+}
+
+.meeting-instance-note {
+  border: 1px solid #335533;
+  background: #111;
+  color: #8df58d;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+.meeting-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.meeting-form-group label {
+  font-weight: bold;
+  font-size: 14px;
+  color: #0f0;
+}
+
+.meeting-form-group input[type="text"] {
+  padding: 10px;
+  border: 1px solid #333;
+  background: #111;
+  color: #0f0;
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+}
+
+.meeting-form-group input[type="text"]:focus {
+  background: #222;
+}
+
+.meeting-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: #111;
+  padding: 10px;
+  border: 1px solid #333;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.meeting-checkbox-group label {
+  font-weight: normal;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px;
+  color: #ccc;
+}
+
+.meeting-checkbox-group label:hover {
+  background-color: #222;
+}
+
+.meeting-checkbox-group input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.meeting-footer {
+  padding: 15px 20px;
+  background: #111;
+  border-top: 2px solid #333;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.meeting-btn-start {
+  background: #0f0;
+  color: #000;
+  border: none;
+  padding: 12px 24px;
+  font-weight: bold;
+  font-family: inherit;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: none;
+  width: 100%;
+}
+
+.meeting-btn-start:hover {
+  background: #afa;
+  transform: none;
+  box-shadow: none;
+}

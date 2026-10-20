@@ -1,0 +1,49 @@
+# Dependências locais
+node_modules/
+*/node_modules/
+
+# Build e artefatos gerados
+dist/
+release/
+coverage/
+.nyc_output/
+
+# Estado local de execução
+workspace/*
+!workspace/.gitkeep
+workspaces/
+server/.runtime/
+.runtime/
+
+# Logs
+*.log
+logs/
+
+# Python/runtime gerado
+.venv/
+.venv*/
+venv/
+**/.venv/
+**/.venv*/
+**/venv/
+**/.review-venv/
+**/__pycache__/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+*.pyc
+*.pyo
+*.pyd
+
+# Segredos e arquivos locais
+.env
+.env.*
+!.env.example
+server/.env
+server/*-agent.json
+
+# Sistema/editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
