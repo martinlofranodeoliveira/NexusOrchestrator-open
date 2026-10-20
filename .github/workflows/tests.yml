@@ -31,5 +31,6 @@ jobs:
       - name: Install dependency packages without lifecycle scripts
         working-directory: ${{ matrix.package }}
         run: npm ci --ignore-scripts --registry=https://registry.npmjs.org --no-audit --no-fund
+      # Hosted Ubuntu restricts unprivileged namespace setup; the child drops all capabilities.
       - name: Test, check and build offline
-        run: python3 scripts/checks-offline.py "${{ matrix.scope }}" --node "$(command -v node)" --dependencies "$GITHUB_WORKSPACE/${{ matrix.package }}/node_modules"
+        run: sudo -n -- /usr/bin/python3 scripts/checks-offline.py "${{ matrix.scope }}" --node "$(command -v node)" --dependencies "$GITHUB_WORKSPACE/${{ matrix.package }}/node_modules"

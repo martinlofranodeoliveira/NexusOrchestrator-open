@@ -35,6 +35,9 @@ def hashes(root):
 
 
 def probe():
+    status = Path('/proc/self/status').read_text()
+    assert int(next(line.split()[1] for line in status.splitlines() if line.startswith('CapEff:')), 16) == 0
+    assert next(line.split()[1] for line in status.splitlines() if line.startswith('NoNewPrivs:')) == '1'
     assert not Path('/home/martin').exists()
     assert not Path('/work/.git').exists()
     assert not Path('/work/.env').exists()
@@ -96,7 +99,7 @@ def inner(scope):
 
 def prefix(snapshot, dependencies, node, scratch, scope):
     command = ['bwrap', '--unshare-all', '--unshare-user', '--disable-userns',
-               '--die-with-parent', '--new-session', '--clearenv']
+               '--die-with-parent', '--new-session', '--clearenv', '--cap-drop', 'ALL']
     for name in ('usr', 'bin', 'sbin', 'lib', 'lib64'):
         path = Path('/') / name
         if path.is_symlink():
