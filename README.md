@@ -12,6 +12,25 @@ Credenciais do usuário não são distribuídas. Despacho automático, retomada 
 
 Os testes de servidor e frontend foram preservados, incluindo os que estavam somente na cópia local; foi acrescentado um teste dos defaults da edição aberta. Passaram 330 testes do servidor, 11 da interface, checagem de sintaxe, TypeScript, ESLint e build Vite. A execução usou fontes e dependências somente leitura, ambiente sem credenciais e rede externa bloqueada; os hashes permaneceram iguais. Execute `npm test` em `server` e `web-v2`, e `npm run build`/`npm run lint` em `web-v2`. Provedores reais, GitHub/GitLab, serviços externos e execução autônoma não foram exercitados por essa validação.
 
+## Resumo de estados de tarefas (sintético)
+
+O helper `web-v2/src/taskSummary.ts` exporta `summarizeTaskStatuses(rows)` para contar apenas estados literais, sem ler títulos/prompts/identificadores e sem conectar backend/agentes.
+
+Uso sintético dentro de `web-v2/src` (TypeScript):
+
+```ts
+import { summarizeTaskStatuses } from './taskSummary.js';
+
+const summary = summarizeTaskStatuses([
+  { status: 'todo' },
+  { status: 'done' },
+  { status: 'review' },
+]);
+// { total: 3, todo: 1, doing: 0, done: 1, blocked: 0, other: 1 }
+```
+
+Limites: a entrada deve ser um array com até 10000 objetos `{ status: string }`; array vazio é válido; qualquer entrada malformada ou acima do limite lança `TypeError('INVALID_TASK_SUMMARY_INPUT')` sem incluir conteúdo da entrada. A contagem é literal e sensível a maiúsculas (`todo`, `doing`, `done`, `blocked`; demais valores caem em `other`) e não muta a entrada. As contagens não inferem progresso, prioridade, autoria ou próximos passos.
+
 ## Exclusões e licença
 
 Não estão incluídos `.env` da operação, handoffs internos, roteiro/seed específico de organização, configurações de implantação, scripts de espelhamento/publicação automática ou as duas imagens promocionais de origem não comprovada. O código útil da aplicação e sprites com proveniência pública permanecem presentes. O recorte não contém histórico privado.

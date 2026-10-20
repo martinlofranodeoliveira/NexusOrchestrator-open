@@ -123,6 +123,7 @@ def inner(scope):
                         ['node_modules/eslint/bin/eslint.js', '.'],
                         ['node_modules/vite/bin/vite.js', 'build']):
             subprocess.run(['/opt/node/bin/node', *command], check=True)
+    subprocess.run(['/usr/bin/python3', '/work/scripts/run-lab-tests.py', 'NexusOrchestrator-open', scope], check=True, timeout=180, stdin=subprocess.DEVNULL)
 
 
 def prefix(snapshot, dependencies, node, scratch, scope):
