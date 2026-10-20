@@ -34,6 +34,34 @@ def hashes(root):
             for path in files(root)}
 
 
+def dependency_manifest(root):
+    """Hash package files without following dependency symlinks."""
+    result = {}
+    def visit(directory):
+        for path in sorted(directory.iterdir()):
+            key = str(path.relative_to(root))
+            if path.is_symlink():
+                result[key] = ['symlink', os.readlink(path)]
+            elif path.is_dir():
+                visit(path)
+            elif path.is_file():
+                result[key] = ['file', path.stat().st_mode & 0o777, hashlib.sha256(path.read_bytes()).hexdigest()]
+            else:
+                raise ValueError('Special dependency files are not admitted')
+    visit(root)
+    return result
+
+
+def stage_dependencies(source, target):
+    source = Path(source).resolve(strict=True)
+    before = dependency_manifest(source)
+    # Namespace setup may run as root on hosted Ubuntu, whose runner home is
+    # private to another uid. Copy packages before entering that user namespace.
+    shutil.copytree(source, target, symlinks=True, copy_function=shutil.copy)
+    assert dependency_manifest(target) == before, 'Dependency staging changed content'
+    return source, target, before
+
+
 def probe():
     status = Path('/proc/self/status').read_text()
     assert int(next(line.split()[1] for line in status.splitlines() if line.startswith('CapEff:')), 16) == 0
@@ -164,10 +192,14 @@ def main():
         (scratch / 'hosts').write_text('127.0.0.1 localhost\n::1 localhost\n')
         (scratch / 'nsswitch.conf').write_text('hosts: files\n')
         assert hashes(snapshot) == before
-        command = prefix(snapshot, args.dependencies, args.node, scratch, args.scope)
+        original_dependencies, staged_dependencies, dependency_before = stage_dependencies(
+            dependencies, scratch / 'dependencies')
+        command = prefix(snapshot, staged_dependencies, args.node, scratch, args.scope)
         command += ['--chdir', '/work', '--', '/usr/bin/python3',
                     '/work/scripts/checks-offline.py', args.scope, '--inner']
         result = subprocess.run(command, env={'PATH': '/usr/bin:/bin'}, timeout=600)
+        assert dependency_manifest(original_dependencies) == dependency_before, 'Installed dependencies changed'
+        assert dependency_manifest(staged_dependencies) == dependency_before, 'Staged dependencies changed'
         assert hashes(snapshot) == before, 'Snapshot changed during isolated checks'
         assert hashes(ROOT) == before, 'Source changed during isolated checks'
         if result.returncode:
