@@ -5,6 +5,10 @@ export function describeRoomOccupancy(input) {
   if (Array.isArray(input)) {
     throw new TypeError("INVALID_ROOM_OCCUPANCY_INPUT");
   }
+  const roomOccupancyInputProto = Object.getPrototypeOf(input);
+  if (roomOccupancyInputProto !== Object.prototype && roomOccupancyInputProto !== null) {
+    throw new TypeError("INVALID_ROOM_OCCUPANCY_INPUT");
+  }
   const configuredSlots = input.configuredSlots;
   const occupants = input.occupants;
   if (Number.isInteger(configuredSlots) === false) {
