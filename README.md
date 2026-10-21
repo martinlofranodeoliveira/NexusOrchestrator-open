@@ -1614,3 +1614,71 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_room_template_count_descriptor.test.mjs`.
+
+
+<!-- community-core:attention-queue-depth-descriptor -->
+### Attention Queue Depth Descriptor for Operations Backlog
+
+Provides a small deterministic helper to describe operations attention backlog from synthetic activeWithoutAssignee, waitingWithoutExecution and queued counts, supporting consistent local handling without reading titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/attention_queue_depth_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with integer activeWithoutAssigneeCount 0..10000, integer waitingWithoutExecutionCount 0..10000 and integer queuedCount 0..10000, each finite safe; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null payload, array payload, non-plain-object, non-integer value, non-finite value or out-of-range value throws TypeError('INVALID_ATTENTION_QUEUE_DEPTH_INPUT') without echoing input. On valid synthetic input return a fresh object with activeWithoutAssigneeCount, waitingWithoutExecutionCount, queuedCount, totalWaiting, hasBacklog, empty where the first three preserve input values, totalWaiting equals the exact sum of the three counts, hasBacklog is true only when totalWaiting is above 0, and empty is true only when totalWaiting equals 0. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about tasks, assignees, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "activeWithoutAssigneeCount": 0,
+    "queuedCount": 0,
+    "waitingWithoutExecutionCount": 0
+  },
+  "output": {
+    "activeWithoutAssigneeCount": 0,
+    "empty": true,
+    "hasBacklog": false,
+    "queuedCount": 0,
+    "totalWaiting": 0,
+    "waitingWithoutExecutionCount": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "activeWithoutAssigneeCount": 2,
+    "queuedCount": 3,
+    "waitingWithoutExecutionCount": 1
+  },
+  "output": {
+    "activeWithoutAssigneeCount": 2,
+    "empty": false,
+    "hasBacklog": true,
+    "queuedCount": 3,
+    "totalWaiting": 6,
+    "waitingWithoutExecutionCount": 1
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "activeWithoutAssigneeCount": 0,
+    "queuedCount": 5,
+    "waitingWithoutExecutionCount": 0
+  },
+  "output": {
+    "activeWithoutAssigneeCount": 0,
+    "empty": false,
+    "hasBacklog": true,
+    "queuedCount": 5,
+    "totalWaiting": 5,
+    "waitingWithoutExecutionCount": 0
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_attention_queue_depth_descriptor.test.mjs`.
