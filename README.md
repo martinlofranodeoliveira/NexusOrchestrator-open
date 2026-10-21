@@ -642,3 +642,71 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_automation_optin_descriptor.test.mjs`.
+
+
+<!-- community-core:recovery-escalation-descriptor -->
+### Recovery Escalation Descriptor for Agent Lanes
+
+Provides a small deterministic helper to describe agent lane recovery escalation pressure from synthetic attempt, maxAttempts and escalated values, supporting consistent local badge handling without reading task titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/recovery_escalation_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with integer attempt 0..10000, integer maxAttempts 0..10000 and boolean escalated; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null, array, non-plain-object, non-integer, non-finite, out-of-range or non-boolean escalated throws TypeError('INVALID_RECOVERY_ESCALATION_INPUT') without echoing input. On valid synthetic input return a fresh object with attempt, maxAttempts, escalated, remainingAttempts, exhausted, needsEscalation where remainingAttempts is maxAttempts minus attempt clamped to 0, exhausted is true when attempt is at or above maxAttempts, and needsEscalation is true only when exhausted is true and escalated is false. Build results only with object literals, use only for-of and Object.entries/values with Map get/set where needed, no dynamic computed property access, no property assignment/update/delete, no Object.assign/create and no aliased builtins. Computation is literal and makes no inference about agents, tasks, rooms, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "attempt": 0,
+    "escalated": false,
+    "maxAttempts": 3
+  },
+  "output": {
+    "attempt": 0,
+    "escalated": false,
+    "exhausted": false,
+    "maxAttempts": 3,
+    "needsEscalation": false,
+    "remainingAttempts": 3
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "attempt": 3,
+    "escalated": false,
+    "maxAttempts": 3
+  },
+  "output": {
+    "attempt": 3,
+    "escalated": false,
+    "exhausted": true,
+    "maxAttempts": 3,
+    "needsEscalation": true,
+    "remainingAttempts": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "attempt": 5,
+    "escalated": true,
+    "maxAttempts": 3
+  },
+  "output": {
+    "attempt": 5,
+    "escalated": true,
+    "exhausted": true,
+    "maxAttempts": 3,
+    "needsEscalation": false,
+    "remainingAttempts": 0
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_recovery_escalation_descriptor.test.mjs`.
