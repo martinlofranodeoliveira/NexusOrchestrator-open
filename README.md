@@ -571,3 +571,74 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_lane_retry_descriptor.test.mjs`.
+
+
+<!-- community-core:automation-optin-descriptor -->
+### Automation Opt-In Descriptor for Open Edition Defaults
+
+Provides a small deterministic helper to describe automation opt-in state from synthetic enabled flags, supporting consistent local handling without reading credentials, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/automation_optin_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with boolean autoDispatchEnabled, boolean orphanRescueEnabled and boolean demoTasksEnabled; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null, array, non-plain-object or non-boolean flags throws TypeError('INVALID_AUTOMATION_OPTIN_INPUT') without echoing input. On valid synthetic input return a fresh object with autoDispatchEnabled, orphanRescueEnabled, demoTasksEnabled, enabledCount, anyEnabled, allEnabled, allDisabled where enabledCount is the number of true flags from 0 to 3, anyEnabled is true when enabledCount is above 0, allEnabled is true only when enabledCount equals 3, and allDisabled is true only when enabledCount equals 0. Build results only with object literals, use only for-of and Object.entries/values with Map get/set where needed, no dynamic computed property access, no property assignment/update/delete, no Object.assign/create and no aliased builtins. Computation is literal and makes no inference about tasks, agents, rooms, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "autoDispatchEnabled": false,
+    "demoTasksEnabled": false,
+    "orphanRescueEnabled": false
+  },
+  "output": {
+    "allDisabled": true,
+    "allEnabled": false,
+    "anyEnabled": false,
+    "autoDispatchEnabled": false,
+    "demoTasksEnabled": false,
+    "enabledCount": 0,
+    "orphanRescueEnabled": false
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "autoDispatchEnabled": true,
+    "demoTasksEnabled": true,
+    "orphanRescueEnabled": false
+  },
+  "output": {
+    "allDisabled": false,
+    "allEnabled": false,
+    "anyEnabled": true,
+    "autoDispatchEnabled": true,
+    "demoTasksEnabled": true,
+    "enabledCount": 2,
+    "orphanRescueEnabled": false
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "autoDispatchEnabled": true,
+    "demoTasksEnabled": true,
+    "orphanRescueEnabled": true
+  },
+  "output": {
+    "allDisabled": false,
+    "allEnabled": true,
+    "anyEnabled": true,
+    "autoDispatchEnabled": true,
+    "demoTasksEnabled": true,
+    "enabledCount": 3,
+    "orphanRescueEnabled": true
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_automation_optin_descriptor.test.mjs`.
