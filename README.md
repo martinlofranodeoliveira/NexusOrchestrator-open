@@ -964,3 +964,77 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_external_fleet_state_descriptor.test.mjs`.
+
+
+<!-- community-core:validator-readiness-descriptor -->
+### Validator Readiness Descriptor for Local Checks
+
+Provides a small deterministic helper to describe opencode validator readiness from synthetic enabled, available, ready and removed flags, supporting consistent local badges without reading code, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/validator_readiness_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with boolean enabled, boolean available, boolean ready and boolean removed; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null, array, non-plain-object or non-boolean enabled/available/ready/removed throws TypeError('INVALID_VALIDATOR_READINESS_INPUT') without echoing input. On valid synthetic input return a fresh object with enabled, available, ready, removed, isReady, isDisabled, isUnavailable where isReady is true only when enabled is true and available is true and ready is true and removed is false, isDisabled is true only when enabled is false or removed is true, and isUnavailable is true only when enabled is true and removed is false and (available is false or ready is false). Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about tasks, agents, rooms, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "available": true,
+    "enabled": true,
+    "ready": true,
+    "removed": false
+  },
+  "output": {
+    "available": true,
+    "enabled": true,
+    "isDisabled": false,
+    "isReady": true,
+    "isUnavailable": false,
+    "ready": true,
+    "removed": false
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "available": true,
+    "enabled": false,
+    "ready": true,
+    "removed": false
+  },
+  "output": {
+    "available": true,
+    "enabled": false,
+    "isDisabled": true,
+    "isReady": false,
+    "isUnavailable": false,
+    "ready": true,
+    "removed": false
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "available": false,
+    "enabled": true,
+    "ready": true,
+    "removed": false
+  },
+  "output": {
+    "available": false,
+    "enabled": true,
+    "isDisabled": false,
+    "isReady": false,
+    "isUnavailable": true,
+    "ready": true,
+    "removed": false
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_validator_readiness_descriptor.test.mjs`.
