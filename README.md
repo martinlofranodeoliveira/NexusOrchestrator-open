@@ -905,3 +905,62 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_review_gate_mode_descriptor.test.mjs`.
+
+
+<!-- community-core:external-fleet-state-descriptor -->
+### External Fleet State Descriptor for Observer Mode
+
+Provides a small deterministic helper to describe external observer fleet state from a synthetic live/stale/unavailable flag, supporting consistent local handling without reading snapshots, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/external_fleet_state_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with string state equal to one of 'live', 'stale', 'unavailable'; extra properties are ignored and input is never mutated. Any malformed shape, missing field, null, array, non-plain-object or any state value outside the three literals throws TypeError('INVALID_FLEET_STATE_INPUT') without echoing input. On valid synthetic input return a fresh object with state, level, isLive, isStale, isUnavailable where level is 2 for 'live', 1 for 'stale', 0 for 'unavailable', isLive is true only when state equals 'live', isStale is true only when state equals 'stale', and isUnavailable is true only when state equals 'unavailable'. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about agents, tasks, rooms, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "state": "live"
+  },
+  "output": {
+    "isLive": true,
+    "isStale": false,
+    "isUnavailable": false,
+    "level": 2,
+    "state": "live"
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "state": "stale"
+  },
+  "output": {
+    "isLive": false,
+    "isStale": true,
+    "isUnavailable": false,
+    "level": 1,
+    "state": "stale"
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "state": "unavailable"
+  },
+  "output": {
+    "isLive": false,
+    "isStale": false,
+    "isUnavailable": true,
+    "level": 0,
+    "state": "unavailable"
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_external_fleet_state_descriptor.test.mjs`.
