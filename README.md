@@ -178,3 +178,62 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_room_occupancy_descriptor.test.mjs`.
+
+
+<!-- community-core:attention-severity-descriptor -->
+### Attention Severity Descriptor for Operations Tasks
+
+Provides a small deterministic helper to describe operations attention severity from a synthetic severity flag, supporting consistent local handling without reading task titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/attention_severity_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with string severity equal to one of 'ok', 'info', 'medium', 'high', 'critical'; extra properties are ignored and input is never mutated. Any malformed shape, missing field, null, array, non-plain-object or any severity value outside the five literals throws TypeError('INVALID_ATTENTION_SEVERITY_INPUT') without echoing input. On valid synthetic input return a fresh object with severity, level, isOk, needsAttention, isCritical where level is 0 for 'ok', 1 for 'info', 2 for 'medium', 3 for 'high', 4 for 'critical', isOk is true only when severity equals 'ok', needsAttention is true only when level is at or above 2, and isCritical is true only when severity equals 'critical'. Build results only with object literals, use only for-of and Object.entries/values with Map get/set where needed, no dynamic computed property access, no property assignment/update/delete, no Object.assign/create and no aliased builtins. Computation is literal and makes no inference about tasks, assignees, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "severity": "ok"
+  },
+  "output": {
+    "isCritical": false,
+    "isOk": true,
+    "level": 0,
+    "needsAttention": false,
+    "severity": "ok"
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "severity": "medium"
+  },
+  "output": {
+    "isCritical": false,
+    "isOk": false,
+    "level": 2,
+    "needsAttention": true,
+    "severity": "medium"
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "severity": "critical"
+  },
+  "output": {
+    "isCritical": true,
+    "isOk": false,
+    "level": 4,
+    "needsAttention": true,
+    "severity": "critical"
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_attention_severity_descriptor.test.mjs`.
