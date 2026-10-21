@@ -1555,3 +1555,62 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_room_replica_gap_descriptor.test.mjs`.
+
+
+<!-- community-core:room-template-count-descriptor -->
+### Room Template Count Descriptor for Pixel Office Catalog
+
+Provides a small deterministic helper to describe pixel-office room template inventory from a synthetic configured count, supporting consistent local handling without reading files, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/room_template_count_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with integer roomTemplatesConfigured 0..10000, finite safe; extra properties are ignored and input is never mutated. Any malformed shape, missing field, null payload, array payload, non-plain-object, non-integer value, non-finite value or out-of-range value throws TypeError('INVALID_ROOM_TEMPLATE_COUNT_INPUT') without echoing input. On valid synthetic input return a fresh object with roomTemplatesConfigured, hasTemplates, empty, single, many where the first preserves input value, hasTemplates is true only when count is above 0, empty is true only when count equals 0, single is true only when count equals 1, and many is true only when count is above 1. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about teams, roles, tasks, agents, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "roomTemplatesConfigured": 0
+  },
+  "output": {
+    "empty": true,
+    "hasTemplates": false,
+    "many": false,
+    "roomTemplatesConfigured": 0,
+    "single": false
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "roomTemplatesConfigured": 1
+  },
+  "output": {
+    "empty": false,
+    "hasTemplates": true,
+    "many": false,
+    "roomTemplatesConfigured": 1,
+    "single": true
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "roomTemplatesConfigured": 4
+  },
+  "output": {
+    "empty": false,
+    "hasTemplates": true,
+    "many": true,
+    "roomTemplatesConfigured": 4,
+    "single": false
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_room_template_count_descriptor.test.mjs`.
