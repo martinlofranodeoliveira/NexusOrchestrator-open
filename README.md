@@ -506,3 +506,68 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_execution_activity_descriptor.test.mjs`.
+
+
+<!-- community-core:lane-retry-descriptor -->
+### Lane Retry Descriptor for Agent Lanes
+
+Provides a small deterministic helper to describe agent lane retry pressure from synthetic retryCount and recoveryCount values, letting the open edition render lane retry badges consistently without reading task titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/lane_retry_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with integer retryCount 0..10000 and integer recoveryCount 0..10000; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null, array, non-plain-object, non-integer, non-finite or out-of-range values throws TypeError('INVALID_LANE_RETRY_INPUT') without echoing input. On valid synthetic input return a fresh object with retryCount, recoveryCount, totalAttempts, hasRetries, hasRecovery, isClean where totalAttempts is retryCount plus recoveryCount, hasRetries is retryCount greater than 0, hasRecovery is recoveryCount greater than 0, and isClean is true only when totalAttempts equals 0. Build results only with object literals, use only for-of and Object.entries/values with Map get/set where needed, no dynamic computed property access, no property assignment/update/delete, no Object.assign/create and no aliased builtins. Computation is literal and makes no inference about agents, tasks, rooms, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "recoveryCount": 0,
+    "retryCount": 0
+  },
+  "output": {
+    "hasRecovery": false,
+    "hasRetries": false,
+    "isClean": true,
+    "recoveryCount": 0,
+    "retryCount": 0,
+    "totalAttempts": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "recoveryCount": 0,
+    "retryCount": 2
+  },
+  "output": {
+    "hasRecovery": false,
+    "hasRetries": true,
+    "isClean": false,
+    "recoveryCount": 0,
+    "retryCount": 2,
+    "totalAttempts": 2
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "recoveryCount": 3,
+    "retryCount": 1
+  },
+  "output": {
+    "hasRecovery": true,
+    "hasRetries": true,
+    "isClean": false,
+    "recoveryCount": 3,
+    "retryCount": 1,
+    "totalAttempts": 4
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_lane_retry_descriptor.test.mjs`.
