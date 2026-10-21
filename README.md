@@ -1428,3 +1428,65 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_room_interlink_count_descriptor.test.mjs`.
+
+
+<!-- community-core:project-sync-status-descriptor -->
+### Project Sync Status Descriptor for Board Integrations
+
+Provides a small deterministic helper to describe project sync readiness from synthetic githubConfigured and projectSyncEnabled flags, supporting consistent local handling without reading files, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/project_sync_status_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with boolean githubConfigured and boolean projectSyncEnabled; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null payload, array payload, non-plain-object, or non-boolean field values throws TypeError('INVALID_PROJECT_SYNC_STATUS_INPUT') without echoing input. On valid synthetic input return a fresh object with githubConfigured, projectSyncEnabled, ready, needsProvider, syncDisabled where the first two preserve input values, ready is true only when both are true, needsProvider is true only when githubConfigured is false, and syncDisabled is true only when githubConfigured is true and projectSyncEnabled is false. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about tasks, roles, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "githubConfigured": true,
+    "projectSyncEnabled": true
+  },
+  "output": {
+    "githubConfigured": true,
+    "needsProvider": false,
+    "projectSyncEnabled": true,
+    "ready": true,
+    "syncDisabled": false
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "githubConfigured": false,
+    "projectSyncEnabled": false
+  },
+  "output": {
+    "githubConfigured": false,
+    "needsProvider": true,
+    "projectSyncEnabled": false,
+    "ready": false,
+    "syncDisabled": false
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "githubConfigured": true,
+    "projectSyncEnabled": false
+  },
+  "output": {
+    "githubConfigured": true,
+    "needsProvider": false,
+    "projectSyncEnabled": false,
+    "ready": false,
+    "syncDisabled": true
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_project_sync_status_descriptor.test.mjs`.
