@@ -1308,3 +1308,64 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_task_assignment_descriptor.test.mjs`.
+
+
+<!-- community-core:room-role-distribution-descriptor -->
+### Room Role Distribution Descriptor for Pixel Office Tiles
+
+Provides a small deterministic helper to describe pixel-office room role distribution from synthetic roles maps, supporting consistent local handling without reading titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/room_role_distribution_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with roles plain object containing 0..100 entries where each key is a string length 1..64 with valid Unicode without unpaired surrogates and without C0 controls except LF/CR/TAB and each value is an integer 0..10000 finite safe; extra properties are ignored and input is never mutated. Any malformed shape, missing field, null payload, array payload, non-plain-object, non-plain roles object, wrong entry count, non-string key, overlong key, empty key, disallowed characters, non-integer value, non-finite value or out-of-range value throws TypeError('INVALID_ROOM_ROLE_DISTRIBUTION_INPUT') without echoing input. On valid synthetic input return a fresh object with roleCount, totalAssignments, hasRoles, isEmpty where roleCount equals number of roles entries, totalAssignments equals sum of all role values, hasRoles is true only when roleCount is above 0, and isEmpty is true only when roleCount equals 0. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about teams, tasks, agents, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "roles": {}
+  },
+  "output": {
+    "hasRoles": false,
+    "isEmpty": true,
+    "roleCount": 0,
+    "totalAssignments": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "roles": {
+      "builder": 2
+    }
+  },
+  "output": {
+    "hasRoles": true,
+    "isEmpty": false,
+    "roleCount": 1,
+    "totalAssignments": 2
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "roles": {
+      "builder": 2,
+      "reviewer": 3
+    }
+  },
+  "output": {
+    "hasRoles": true,
+    "isEmpty": false,
+    "roleCount": 2,
+    "totalAssignments": 5
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_room_role_distribution_descriptor.test.mjs`.
