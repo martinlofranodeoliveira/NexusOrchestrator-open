@@ -1369,3 +1369,62 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_room_role_distribution_descriptor.test.mjs`.
+
+
+<!-- community-core:room-interlink-count-descriptor -->
+### Room Interlink Count Descriptor for Pixel Office Tiles
+
+Provides a small deterministic helper to describe pixel-office room interlink counts from synthetic interlinkedRoomIds lists, supporting consistent local handling without reading titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/room_interlink_count_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with interlinkedRoomIds array of 0..100 string entries where each entry has length 1..64 with valid Unicode without unpaired surrogates and without C0 control characters except LF/CR/TAB; extra properties are ignored and input is never mutated. Any malformed shape, missing field, null payload, array payload, non-plain-object, non-array field, wrong entry count, non-string entry, empty entry, overlong entry, disallowed characters or unpaired surrogates throws TypeError('INVALID_ROOM_INTERLINK_COUNT_INPUT') without echoing input. On valid synthetic input return a fresh object with linkCount, hasLinks, isIsolated where linkCount equals number of interlinkedRoomIds entries, hasLinks is true only when linkCount is above 0, and isIsolated is true only when linkCount equals 0. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about teams, roles, tasks, agents, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "interlinkedRoomIds": []
+  },
+  "output": {
+    "hasLinks": false,
+    "isIsolated": true,
+    "linkCount": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "interlinkedRoomIds": [
+      "room-a"
+    ]
+  },
+  "output": {
+    "hasLinks": true,
+    "isIsolated": false,
+    "linkCount": 1
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "extra": 123,
+    "interlinkedRoomIds": [
+      "room-a",
+      "room-b"
+    ]
+  },
+  "output": {
+    "hasLinks": true,
+    "isIsolated": false,
+    "linkCount": 2
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_room_interlink_count_descriptor.test.mjs`.
