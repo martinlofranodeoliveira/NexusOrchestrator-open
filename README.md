@@ -237,3 +237,71 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_attention_severity_descriptor.test.mjs`.
+
+
+<!-- community-core:run-queue-load-descriptor -->
+### Run Queue Load Descriptor for Orchestrator Runs
+
+Provides a small deterministic helper to describe orchestrator run queue load from synthetic active, preparing and queued counts, letting the open edition render run badges consistently without reading titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/run_queue_load_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with integer active 0..10000, integer preparing 0..10000 and integer queued 0..10000; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null, array, non-plain-object, non-integer, non-finite or out-of-range values throws TypeError('INVALID_RUN_QUEUE_LOAD_INPUT') without echoing input. On valid synthetic input return a fresh object with active, preparing, queued, total, idle, hasBacklog where total is active plus preparing plus queued, idle is total equals 0, and hasBacklog is queued greater than 0. Build results only with object literals, use only for-of and Object.entries/values with Map get/set where needed, no dynamic computed property access, no property assignment/update/delete, no Object.assign/create and no aliased builtins. Computation is literal and makes no inference about agents, tasks, rooms, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "active": 0,
+    "preparing": 0,
+    "queued": 0
+  },
+  "output": {
+    "active": 0,
+    "hasBacklog": false,
+    "idle": true,
+    "preparing": 0,
+    "queued": 0,
+    "total": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "active": 2,
+    "preparing": 1,
+    "queued": 0
+  },
+  "output": {
+    "active": 2,
+    "hasBacklog": false,
+    "idle": false,
+    "preparing": 1,
+    "queued": 0,
+    "total": 3
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "active": 1,
+    "preparing": 0,
+    "queued": 4
+  },
+  "output": {
+    "active": 1,
+    "hasBacklog": true,
+    "idle": false,
+    "preparing": 0,
+    "queued": 4,
+    "total": 5
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_run_queue_load_descriptor.test.mjs`.
