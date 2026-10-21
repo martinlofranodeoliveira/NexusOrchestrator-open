@@ -305,3 +305,68 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_run_queue_load_descriptor.test.mjs`.
+
+
+<!-- community-core:lane-load-descriptor -->
+### Lane Load Descriptor for Agent Lanes
+
+Provides a small deterministic helper to describe agent lane load from synthetic totalTracked and active counts, letting the open edition render lane badges consistently without reading titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/lane_load_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with integer totalTracked 0..10000 and integer active 0..10000 where active is at most totalTracked; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null, array, non-plain-object, non-integer, non-finite, out-of-range values or active above totalTracked throws TypeError('INVALID_LANE_LOAD_INPUT') without echoing input. On valid synthetic input return a fresh object with totalTracked, active, idleCount, empty, idle, hasActive where idleCount is totalTracked minus active, empty is totalTracked equals 0, idle is active equals 0, and hasActive is active greater than 0. Build results only with object literals, use only for-of and Object.entries/values with Map get/set where needed, no dynamic computed property access, no property assignment/update/delete, no Object.assign/create and no aliased builtins. Computation is literal and makes no inference about agents, tasks, rooms, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "active": 2,
+    "totalTracked": 5
+  },
+  "output": {
+    "active": 2,
+    "empty": false,
+    "hasActive": true,
+    "idle": false,
+    "idleCount": 3,
+    "totalTracked": 5
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "active": 0,
+    "totalTracked": 0
+  },
+  "output": {
+    "active": 0,
+    "empty": true,
+    "hasActive": false,
+    "idle": true,
+    "idleCount": 0,
+    "totalTracked": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "active": 3,
+    "totalTracked": 3
+  },
+  "output": {
+    "active": 3,
+    "empty": false,
+    "hasActive": true,
+    "idle": false,
+    "idleCount": 0,
+    "totalTracked": 3
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_lane_load_descriptor.test.mjs`.
