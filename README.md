@@ -1490,3 +1490,68 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_project_sync_status_descriptor.test.mjs`.
+
+
+<!-- community-core:room-replica-gap-descriptor -->
+### Room Replica Gap Descriptor for Pixel Office Rooms
+
+Provides a small deterministic helper to describe pixel-office room replica gaps from synthetic configuredSlots and replicaTarget counts, supporting consistent local handling without reading titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/room_replica_gap_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with integer configuredSlots 0..10000 and integer replicaTarget 0..10000, each finite safe; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null payload, array payload, non-plain-object, non-integer value, non-finite value or out-of-range value throws TypeError('INVALID_ROOM_REPLICA_GAP_INPUT') without echoing input. On valid synthetic input return a fresh object with configuredSlots, replicaTarget, gap, needsScale, atTarget, overProvisioned where the first two preserve input values, gap equals replicaTarget minus configuredSlots, needsScale is true only when replicaTarget is above configuredSlots, atTarget is true only when both are equal, and overProvisioned is true only when configuredSlots is above replicaTarget. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about teams, roles, tasks, agents, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "configuredSlots": 4,
+    "replicaTarget": 4
+  },
+  "output": {
+    "atTarget": true,
+    "configuredSlots": 4,
+    "gap": 0,
+    "needsScale": false,
+    "overProvisioned": false,
+    "replicaTarget": 4
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "configuredSlots": 2,
+    "replicaTarget": 5
+  },
+  "output": {
+    "atTarget": false,
+    "configuredSlots": 2,
+    "gap": 3,
+    "needsScale": true,
+    "overProvisioned": false,
+    "replicaTarget": 5
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "configuredSlots": 5,
+    "replicaTarget": 2
+  },
+  "output": {
+    "atTarget": false,
+    "configuredSlots": 5,
+    "gap": -3,
+    "needsScale": false,
+    "overProvisioned": true,
+    "replicaTarget": 2
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_room_replica_gap_descriptor.test.mjs`.
