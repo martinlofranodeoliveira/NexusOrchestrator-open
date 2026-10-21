@@ -825,3 +825,65 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_agent_presence_descriptor.test.mjs`.
+
+
+<!-- community-core:review-gate-mode-descriptor -->
+### Review Gate Mode Descriptor for Opencode Checks
+
+Provides a small deterministic helper to describe opencode review gate mode from synthetic enabled and mode flags, supporting consistent local handling without reading code, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/review_gate_mode_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with boolean enabled and string mode equal to one of 'advisory', 'required'; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null, array, non-plain-object, non-boolean enabled or mode outside the two literals throws TypeError('INVALID_REVIEW_GATE_MODE_INPUT') without echoing input. On valid synthetic input return a fresh object with enabled, mode, isAdvisory, isRequired, isInactive where isAdvisory is true only when enabled is true and mode equals 'advisory', isRequired is true only when enabled is true and mode equals 'required', and isInactive is true only when enabled is false. Build results only with object literals, use only for-of and Object.entries/values with Map get/set where needed, no dynamic computed property access, no property assignment/update/delete, no Object.assign/create and no aliased builtins. Computation is literal and makes no inference about tasks, agents, rooms, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "enabled": true,
+    "mode": "advisory"
+  },
+  "output": {
+    "enabled": true,
+    "isAdvisory": true,
+    "isInactive": false,
+    "isRequired": false,
+    "mode": "advisory"
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "enabled": true,
+    "mode": "required"
+  },
+  "output": {
+    "enabled": true,
+    "isAdvisory": false,
+    "isInactive": false,
+    "isRequired": true,
+    "mode": "required"
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "enabled": false,
+    "mode": "advisory"
+  },
+  "output": {
+    "enabled": false,
+    "isAdvisory": false,
+    "isInactive": true,
+    "isRequired": false,
+    "mode": "advisory"
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_review_gate_mode_descriptor.test.mjs`.
