@@ -710,3 +710,59 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_recovery_escalation_descriptor.test.mjs`.
+
+
+<!-- community-core:room-floor-descriptor -->
+### Room Floor Descriptor for Pixel Office Levels
+
+Provides a small deterministic helper to describe pixel-office room floor assignment from a synthetic floor index, supporting consistent local level badges without reading titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/room_floor_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with integer floor 0..10000; extra properties are ignored and input is never mutated. Any malformed shape, missing field, null, array, non-plain-object, non-integer, non-finite or out-of-range value throws TypeError('INVALID_ROOM_FLOOR_INPUT') without echoing input. On valid synthetic input return a fresh object with floor, isBuiltinFloor, isGroundFloor, isUpperFloor where isGroundFloor is true only when floor equals 0, isBuiltinFloor is true only when floor is between 0 and 8 inclusive, and isUpperFloor is true only when floor is greater than 0. Build results only with object literals, use only for-of and Object.entries/values with Map get/set where needed, no dynamic computed property access, no property assignment/update/delete, no Object.assign/create and no aliased builtins. Computation is literal and makes no inference about rooms, teams, topology, occupants, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "floor": 0
+  },
+  "output": {
+    "floor": 0,
+    "isBuiltinFloor": true,
+    "isGroundFloor": true,
+    "isUpperFloor": false
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "floor": 3
+  },
+  "output": {
+    "floor": 3,
+    "isBuiltinFloor": true,
+    "isGroundFloor": false,
+    "isUpperFloor": true
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "floor": 12
+  },
+  "output": {
+    "floor": 12,
+    "isBuiltinFloor": false,
+    "isGroundFloor": false,
+    "isUpperFloor": true
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_room_floor_descriptor.test.mjs`.
