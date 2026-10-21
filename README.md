@@ -1252,3 +1252,59 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_provider_env_hint_descriptor.test.mjs`.
+
+
+<!-- community-core:task-assignment-descriptor -->
+### Task Assignment Descriptor for Operations Tasks
+
+Provides a small deterministic helper to describe operations task assignment from a synthetic assignee value, supporting consistent local handling without reading titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/task_assignment_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with assignee either string length 0..1024 with valid Unicode without unpaired surrogates and without C0 controls except LF/CR/TAB or null; extra properties are ignored and input is never mutated. Any malformed shape, missing field, null payload, array payload, non-plain-object, non-string non-null assignee, overlong string or disallowed characters throws TypeError('INVALID_TASK_ASSIGNMENT_INPUT') without echoing input. On valid synthetic input return a fresh object with assignee, hasAssignee, isUnassigned, assigneeLength where assignee preserves input value, assigneeLength is string length or 0 when null, hasAssignee is true only when assignee is string with length above 0, and isUnassigned mirrors negated hasAssignee. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about tasks, roles, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "assignee": null
+  },
+  "output": {
+    "assignee": null,
+    "assigneeLength": 0,
+    "hasAssignee": false,
+    "isUnassigned": true
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "assignee": ""
+  },
+  "output": {
+    "assignee": "",
+    "assigneeLength": 0,
+    "hasAssignee": false,
+    "isUnassigned": true
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "assignee": "mara"
+  },
+  "output": {
+    "assignee": "mara",
+    "assigneeLength": 4,
+    "hasAssignee": true,
+    "isUnassigned": false
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_task_assignment_descriptor.test.mjs`.
