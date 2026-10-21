@@ -438,3 +438,71 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_attention_health_descriptor.test.mjs`.
+
+
+<!-- community-core:execution-activity-descriptor -->
+### Execution Activity Descriptor for Operations Tasks
+
+Provides a small deterministic helper to describe operations task execution activity from synthetic running, preparing and queued flags, letting the open edition render execution badges consistently without reading titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/execution_activity_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with boolean running, boolean preparing and boolean queued; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null, array, non-plain-object or non-boolean flags throws TypeError('INVALID_EXECUTION_ACTIVITY_INPUT') without echoing input. On valid synthetic input return a fresh object with running, preparing, queued, active, idle, hasQueued where active is true when any flag is true, idle is true only when all flags are false, and hasQueued is true only when queued is true. Build results only with object literals, use only for-of and Object.entries/values with Map get/set where needed, no dynamic computed property access, no property assignment/update/delete, no Object.assign/create and no aliased builtins. Computation is literal and makes no inference about tasks, assignees, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "preparing": false,
+    "queued": false,
+    "running": false
+  },
+  "output": {
+    "active": false,
+    "hasQueued": false,
+    "idle": true,
+    "preparing": false,
+    "queued": false,
+    "running": false
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "preparing": false,
+    "queued": false,
+    "running": true
+  },
+  "output": {
+    "active": true,
+    "hasQueued": false,
+    "idle": false,
+    "preparing": false,
+    "queued": false,
+    "running": true
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "preparing": true,
+    "queued": true,
+    "running": false
+  },
+  "output": {
+    "active": true,
+    "hasQueued": true,
+    "idle": false,
+    "preparing": true,
+    "queued": true,
+    "running": false
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_execution_activity_descriptor.test.mjs`.
