@@ -161,6 +161,11 @@ export interface OperationsSnapshot {
     recentFailures?: OperationsLaneRecord[];
   };
   settings?: {
+    externalFleet?: {
+      enabled: boolean;
+      state: 'live' | 'stale' | 'unavailable';
+      updatedAtMs: number | null;
+    };
     boardProvider?: string;
     githubConfigured?: boolean;
     projectSyncEnabled?: boolean;

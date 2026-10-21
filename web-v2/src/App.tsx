@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { BottomToolbar } from './components/BottomToolbar.js';
 import { DebugView } from './components/DebugView.js';
+import { FleetStatusBar } from './components/FleetStatusBar.js';
+import './components/FleetStatusBar.css';
 import { KanbanSidebar } from './components/KanbanSidebar.js';
 import { LiveLogDock } from './components/LiveLogDock.js';
 import { MeetingModal } from './components/MeetingModal.js';
@@ -158,9 +160,39 @@ function App() {
   const [agentModalState, setAgentModalState] = useState<AgentModalState | null>(null);
   const [isKanbanOpen, setIsKanbanOpen] = useState(false);
   const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
-  const [githubTasks, setGithubTasks] = useState<BoardTask[]>([]);
-  const [backendAgents, setBackendAgents] = useState<BackendAgent[]>([]);
-  const [operationsSnapshot, setOperationsSnapshot] = useState<OperationsSnapshot | null>(null);
+  const [storedGithubTasks, setGithubTasks] = useState<BoardTask[]>([]);
+  const [storedBackendAgents, setBackendAgents] = useState<BackendAgent[]>([]);
+  const [storedOperationsSnapshot, setOperationsSnapshot] = useState<OperationsSnapshot | null>(null);
+  const [transportConnected, setTransportConnected] = useState(socket.connected);
+  const [observerNow, setObserverNow] = useState(Date.now);
+  const fleetEnabled = Boolean(storedOperationsSnapshot?.settings?.externalFleet?.enabled);
+  const operationsSnapshot = useMemo(() => {
+    const fleet = storedOperationsSnapshot?.settings?.externalFleet;
+    if (!fleet?.enabled) return storedOperationsSnapshot;
+    const expired = fleet.updatedAtMs === null || observerNow - fleet.updatedAtMs > 30000;
+    if (transportConnected && !expired) return storedOperationsSnapshot;
+    return {
+      ...storedOperationsSnapshot,
+      runs: { ...storedOperationsSnapshot?.runs, active: 0, preparing: 0, queued: 0 },
+      settings: { ...storedOperationsSnapshot?.settings, externalFleet: {
+        ...fleet, state: !transportConnected || fleet.state === 'unavailable'
+          ? 'unavailable' as const : 'stale' as const,
+      } },
+    };
+  }, [storedOperationsSnapshot, transportConnected, observerNow]);
+  const unconfirmedFleet = fleetEnabled && operationsSnapshot?.settings?.externalFleet?.state !== 'live';
+  const backendAgents = useMemo(() => unconfirmedFleet ? storedBackendAgents.map((agent) => ({
+    ...agent, state: 'unavailable', status: 'unavailable', task: '', currentTask: '',
+    currentTaskId: null, activeTaskId: null, laneState: null, laneTaskId: null,
+  })) : storedBackendAgents, [storedBackendAgents, unconfirmedFleet]);
+  const githubTasks = useMemo(() => unconfirmedFleet ? storedGithubTasks.map((task) => ({
+    ...task, assignee: null, state: (task.state || task.status) === 'done' ? 'done' : 'blocked',
+  })) : storedGithubTasks, [storedGithubTasks, unconfirmedFleet]);
+  useEffect(() => {
+    if (!fleetEnabled) return;
+    const timer = window.setInterval(() => setObserverNow(Date.now()), 2000);
+    return () => window.clearInterval(timer);
+  }, [fleetEnabled]);
   const liveLogSeqRef = useRef(1);
   const operationalAgentStates = useMemo(
     () => buildOperationalAgentStates(backendAgents, githubTasks, operationsSnapshot),
@@ -281,6 +313,9 @@ function App() {
     console.log('🔌 Socket.io Status:', socket.connected ? 'Already Connected' : 'Connecting...');
     
     const onConnect = () => {
+      // A fresh operations event confirms recovery; reconnect alone must not
+      // restore activity from a cached snapshot.
+      setTransportConnected(false);
       console.log('✅ Connected to backend socket');
       socket.emit('request_initial_state');
       void loadOperationalSnapshot();
@@ -288,6 +323,8 @@ function App() {
 
     if (socket.connected) onConnect();
     socket.on('connect', onConnect);
+    const onDisconnect = () => setTransportConnected(false);
+    socket.on('disconnect', onDisconnect);
 
     socket.on('agents_update', (data: BackendAgent[]) => {
       console.log('🤖 Agents update received:', data.length);
@@ -300,6 +337,8 @@ function App() {
     });
 
     socket.on('operations_update', (snapshot: OperationsSnapshot) => {
+      setTransportConnected(socket.connected);
+      setObserverNow(Date.now());
       setOperationsSnapshot(snapshot);
     });
 
@@ -325,6 +364,7 @@ function App() {
 
     return () => {
       socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
       socket.off('agents_update');
       socket.off('tasks_update');
       socket.off('operations_update');
@@ -411,6 +451,7 @@ function App() {
         thinking: hasTask || isPreparingOrResuming ? 'active' : 'idle',
         blocked: 'waiting',
         error: 'waiting',
+        unavailable: 'waiting',
       };
       const fallbackVisualStatus = statusMap[String(agentState)] || (hasTask ? 'active' : 'idle');
       const visualStatus =
@@ -643,8 +684,17 @@ function App() {
         onToggleAlwaysShowOverlay={handleToggleAlwaysShowOverlay}
         workspaceFolders={workspaceFolders}
         onOpenKanban={() => setIsKanbanOpen(true)}
-        onStartMeeting={() => setIsMeetingModalOpen(true)}
+        onStartMeeting={operationsSnapshot?.settings?.externalFleet?.enabled ? undefined : () => setIsMeetingModalOpen(true)}
+        canManageAgents={!operationsSnapshot?.settings?.externalFleet?.enabled}
       />
+
+      {operationsSnapshot?.settings?.externalFleet?.enabled && (
+        <FleetStatusBar
+          snapshot={operationsSnapshot}
+          onOpenBoard={() => setIsKanbanOpen(true)}
+          onRefresh={() => { void loadOperationalSnapshot(); }}
+        />
+      )}
 
       {editor.isEditMode && editor.isDirty && (
         <EditActionBar editor={editor} editorState={editorState} />
@@ -660,6 +710,7 @@ function App() {
           onClose={() => setIsKanbanOpen(false)} 
           onMoveTask={handleMoveTask} 
           onCreateTask={handleCreateTask}
+          readOnly={operationsSnapshot?.settings?.externalFleet?.enabled}
         />
       )}
 
@@ -726,8 +777,11 @@ function App() {
           panRef={editor.panRef}
           onCloseAgent={handleCloseAgent}
           onEditAgent={handleEditAgent}
+          canManageAgents={!operationsSnapshot?.settings?.externalFleet?.enabled}
           alwaysShowOverlay={alwaysShowOverlay}
-          tasks={githubTasks}
+          tasks={operationsSnapshot?.settings?.externalFleet?.enabled
+            ? githubTasks.filter((task) => ['ready', 'in_progress'].includes(task.state || task.status || ''))
+            : githubTasks}
           backendAgents={displayAgents}
           operationalStates={operationalAgentStates}
         />
@@ -832,15 +886,19 @@ function App() {
         agents={displayAgents}
         operationalStates={operationalAgentStates}
         onOpenAgent={(agentId) => setTerminalAgent(agentId)}
+        bottomOffset={operationsSnapshot?.settings?.externalFleet?.enabled ? 76 : 10}
       />
 
-      <OperationsDock snapshot={operationsSnapshot} onOpenKanban={() => setIsKanbanOpen(true)} />
+      {!operationsSnapshot?.settings?.externalFleet?.enabled && (
+        <OperationsDock snapshot={operationsSnapshot} onOpenKanban={() => setIsKanbanOpen(true)} />
+      )}
 
       {terminalAgent && (
         <RetroTerminal 
           agent={activeTerminalAgent}
           currentInstanceLabel={currentInstanceLabel}
           logs={serverLogs[terminalAgent] || []}
+          readOnly={operationsSnapshot?.settings?.externalFleet?.enabled}
           onClose={() => setTerminalAgent(null)}
           onStartTask={(id: string, taskInput: string) => {
             fetch(apiUrl('/api/start_ralph'), {

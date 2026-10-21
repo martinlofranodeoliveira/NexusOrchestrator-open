@@ -9,6 +9,7 @@ import type { ToolActivity } from '../types.js';
 import { CharacterState, TILE_SIZE } from '../types.js';
 
 interface ToolOverlayProps {
+  canManageAgents?: boolean;
   officeState: OfficeState;
   agents: number[];
   agentTools: Record<number, ToolActivity[]>;
@@ -50,6 +51,13 @@ function getActivityText(
 
 function formatProviderLabel(provider: string | null | undefined): string {
   switch (String(provider || '').trim().toLowerCase()) {
+    case 'opencode':
+    case 'opencode-go':
+      return 'OPENCODE';
+    case 'codex':
+      return 'CODEX';
+    case 'local':
+      return 'LOCAL';
     case 'azure':
     case 'azure_openai':
     case 'azure-openai':
@@ -78,6 +86,7 @@ export function ToolOverlay({
   panRef,
   onCloseAgent,
   onEditAgent,
+  canManageAgents = true,
   alwaysShowOverlay,
   tasks = [],
   backendAgents = [],
@@ -315,7 +324,7 @@ export function ToolOverlay({
                   </div>
                 )}
               </div>
-              {isSelected && !isSub && backendAgent && (
+              {canManageAgents && isSelected && !isSub && backendAgent && (
                 <button
                   onClick={(event) => {
                     event.stopPropagation();
@@ -337,7 +346,7 @@ export function ToolOverlay({
                   tune
                 </button>
               )}
-              {isSelected && !isSub && (
+              {canManageAgents && isSelected && !isSub && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();

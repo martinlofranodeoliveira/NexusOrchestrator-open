@@ -16,6 +16,7 @@ interface LiveLogDockProps {
   agents: BackendAgent[];
   operationalStates?: Record<number, OperationalAgentState>;
   onOpenAgent: (agentId: number) => void;
+  bottomOffset?: number;
 }
 
 function getAgentLabel(entry: LiveLogEntry, agents: BackendAgent[]): string {
@@ -35,6 +36,7 @@ export function LiveLogDock({
   agents,
   operationalStates = {},
   onOpenAgent,
+  bottomOffset = 10,
 }: LiveLogDockProps) {
   const [collapsed, setCollapsed] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -52,7 +54,7 @@ export function LiveLogDock({
       style={{
         position: 'absolute',
         right: 10,
-        bottom: 10,
+        bottom: bottomOffset,
         width: collapsed ? 240 : 460,
         maxWidth: 'calc(100vw - 20px)',
         zIndex: 90,

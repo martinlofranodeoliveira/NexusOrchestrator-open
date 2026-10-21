@@ -5,6 +5,7 @@ import type { BackendAgent, BoardTask } from '../operationalState.js';
 import './KanbanSidebar.css';
 
 interface KanbanSidebarProps {
+  readOnly?: boolean;
   tasks: BoardTask[];
   agents: BackendAgent[];
   currentInstanceId?: string | null;
@@ -29,6 +30,7 @@ export function KanbanSidebar({
   onClose,
   onMoveTask,
   onCreateTask,
+  readOnly = false,
 }: KanbanSidebarProps) {
   const [selectedAssignee, setSelectedAssignee] = useState<Record<string, string>>({});
   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -88,7 +90,10 @@ export function KanbanSidebar({
             const isOwnedLocally = Boolean(ownerLabel && currentOwnerId && ownerLabel === currentOwnerId);
             return (
               <div key={task.id} className="kanban-card">
-                <div className="kanban-card-title">{task.id} - {task.title}</div>
+                <div className="kanban-card-title">{readOnly ? task.title : `${task.id} - ${task.title}`}</div>
+                {readOnly && <div className="kanban-card-reference" title={task.id}>
+                  {task.repo?.split('/').at(-1)} · Ref. {task.id.replace(/^task-/, '').slice(0, 8)}
+                </div>}
 
                 {ownerLabel && (
                   <div className="kanban-card-meta">
@@ -99,7 +104,7 @@ export function KanbanSidebar({
                   </div>
                 )}
 
-                <div className="kanban-card-actions">
+                {!readOnly && <div className="kanban-card-actions">
                   <select
                     className="kanban-select"
                     value={selectedAssignee[task.id] || task.assignee || ''}
@@ -125,7 +130,10 @@ export function KanbanSidebar({
                   >
                     {renderStatusOptions()}
                   </select>
-                </div>
+                </div>}
+                {readOnly && task.githubUrl && (
+                  <a href={task.githubUrl} target="_blank" rel="noreferrer">Abrir no GitHub</a>
+                )}
               </div>
             );
           })}
@@ -157,7 +165,7 @@ export function KanbanSidebar({
   );
 
   return (
-    <div className="kanban-sidebar">
+    <div className={`kanban-sidebar${readOnly ? ' kanban-sidebar-managed' : ''}`}>
       <div className="kanban-header">
         <div className="kanban-title">Board Operacional (Kanban)</div>
         <button className="kanban-close" onClick={onClose}>[X]</button>
@@ -168,7 +176,7 @@ export function KanbanSidebar({
         <span>Cards externos: {foreignTasks.length}</span>
       </div>
 
-      <div className="kanban-create-task">
+      {readOnly ? <p className="fleet-managed-note">Os diretores criam e distribuem tarefas automaticamente. Consulte as entregas em Publicadas e as propostas recusadas ou em revisão em Bloqueadas. Deslize o quadro para ver as colunas.</p> : <div className="kanban-create-task">
         <div className="kanban-create-title">Nova task</div>
         <input
           className="kanban-input"
@@ -208,9 +216,15 @@ export function KanbanSidebar({
         <button className="kanban-create-button" onClick={handleCreateTask}>
           Criar Task
         </button>
-      </div>
+      </div>}
 
       <div className="kanban-board">
+        {readOnly ? <>
+          {renderColumn('EM ANDAMENTO', 'in_progress')}
+          {renderColumn('NA FILA', 'ready')}
+          {renderColumn('PUBLICADAS', 'done')}
+          {renderColumn('BLOQUEADAS', 'blocked')}
+        </> : <>
         {renderColumn('BACKLOG', 'backlog')}
         {renderColumn('READY', 'ready')}
         {renderColumn('IN PROGRESS', 'in_progress')}
@@ -218,6 +232,7 @@ export function KanbanSidebar({
         {renderColumn('PENDENTE ADMIN', 'pendente_admin')}
         {renderColumn('DONE', 'done')}
         {renderColumn('BLOCKED', 'blocked')}
+        </>}
         {foreignTasks.length > 0 && renderForeignColumn()}
       </div>
     </div>

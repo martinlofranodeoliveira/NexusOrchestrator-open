@@ -40,6 +40,8 @@ export interface BackendAgent {
 }
 
 export interface BoardTask {
+  githubUrl?: string | null;
+  repo?: string;
   id: string;
   title: string;
   state?: string;
@@ -84,7 +86,7 @@ const ACTIVE_BACKEND_STATES = new Set([
   'preparing',
   'thinking',
 ]);
-const WAITING_BACKEND_STATES = new Set(['waiting', 'paused', 'blocked', 'failed', 'error']);
+const WAITING_BACKEND_STATES = new Set(['waiting', 'paused', 'blocked', 'failed', 'error', 'unavailable']);
 const WORKING_LANE_STATES = new Set(['preparing_workspace', 'running', 'integrating']);
 const RECOVERING_LANE_STATES = new Set(['retry_scheduled']);
 const WAITING_LANE_STATES = new Set(['queued']);

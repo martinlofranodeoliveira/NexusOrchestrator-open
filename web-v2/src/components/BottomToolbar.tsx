@@ -13,6 +13,7 @@ interface BottomToolbarProps {
   alwaysShowOverlay: boolean;
   onToggleAlwaysShowOverlay: () => void;
   workspaceFolders: WorkspaceFolder[];
+  canManageAgents?: boolean;
 }
 
 const panelStyle: React.CSSProperties = {
@@ -57,6 +58,7 @@ export function BottomToolbar({
   workspaceFolders,
   onOpenKanban,
   onStartMeeting,
+  canManageAgents = true,
 }: BottomToolbarProps & { onOpenKanban?: () => void, onStartMeeting?: () => void }) {
   const [hovered, setHovered] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -93,7 +95,7 @@ export function BottomToolbar({
 
   return (
     <div style={panelStyle}>
-      <div ref={folderPickerRef} style={{ position: 'relative' }}>
+      {canManageAgents && <div ref={folderPickerRef} style={{ position: 'relative' }}>
         <button
           onClick={handleAgentClick}
           onMouseEnter={() => setHovered('agent')}
@@ -151,7 +153,7 @@ export function BottomToolbar({
             ))}
           </div>
         )}
-      </div>
+      </div>}
       
       {onOpenKanban && (
         <button

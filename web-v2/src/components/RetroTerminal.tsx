@@ -11,6 +11,7 @@ interface Message {
 }
 
 interface RetroTerminalProps {
+  readOnly?: boolean;
   agent: BackendAgent | null;
   logs: string[];
   onClose: () => void;
@@ -24,6 +25,7 @@ export function RetroTerminal({
   onClose,
   onStartTask,
   currentInstanceLabel = null,
+  readOnly = false,
 }: RetroTerminalProps) {
   const [activeTab, setActiveTab] = useState<'logs' | 'chat'>('logs');
   const [chatInput, setChatInput] = useState('');
@@ -82,7 +84,7 @@ export function RetroTerminal({
           </div>
           <div className="terminal-tabs">
             <button className={activeTab === 'logs' ? 'active' : ''} onClick={() => setActiveTab('logs')}>[LOGS]</button>
-            <button className={activeTab === 'chat' ? 'active' : ''} onClick={() => setActiveTab('chat')}>[CHAT]</button>
+            {!readOnly && <button className={activeTab === 'chat' ? 'active' : ''} onClick={() => setActiveTab('chat')}>[CHAT]</button>}
           </div>
           <button className="terminal-close" onClick={onClose}>[X]</button>
         </div>
@@ -109,7 +111,7 @@ export function RetroTerminal({
           </div>
         )}
 
-        <div className="terminal-footer">
+        {readOnly ? <p className="fleet-managed-note">Este agente recebe tarefas do diretor. Aqui você acompanha os eventos reais da execução.</p> : <div className="terminal-footer">
           <span className="prompt">{activeTab === 'logs' ? `root@${agent.id}:~$` : '>'}</span>
           <input
             type="text"
@@ -143,7 +145,7 @@ export function RetroTerminal({
           >
             {activeTab === 'logs' ? 'EXECUTE' : 'SEND'}
           </button>
-        </div>
+        </div>}
       </div>
     </div>
   );

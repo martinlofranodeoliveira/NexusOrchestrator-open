@@ -8,9 +8,27 @@ Requer Node.js 22 ou posterior. Instale as dependências em `server` e `web-v2`.
 
 Credenciais do usuário não são distribuídas. Despacho automático, retomada de órfãos e criação de tarefas de demonstração ficam desativados por padrão e exigem opt-in explícito. A interface pode ser aberta sem provisionar serviços; integrações externas precisam de configuração própria e podem consumir recursos quando acionadas pelo usuário. Esta edição não inclui implantação hospedada ou contas de provedores.
 
+## Acompanhar uma equipe externa em tempo real
+
+O modo opcional de equipe externa reutiliza o escritório Nexus para acompanhar agentes, fila, entregas e eventos de um controlador independente. A interface recebe atualizações por Socket.IO a cada dois segundos. O controlador continua responsável por criar e distribuir tarefas, executar modelos, validar alterações e publicar; este modo do Nexus permite apenas acompanhar essa execução.
+
+Depois de instalar as dependências acima, execute `npm run build` em `web-v2`. Inicie **somente** o servidor específico deste modo:
+
+```sh
+NEXUS_FLEET_SNAPSHOT=/caminho/absoluto/privado/snapshot.json node server/fleetServer.js
+```
+
+Abra <http://127.0.0.1:4000/>. Esse servidor não carrega `.env`, não importa o motor de execução padrão e não chama provedores. A criação manual de agentes/tarefas e o envio de comandos ficam ocultos nesse modo. Os endpoints de aplicação aceitam apenas leitura; os POSTs internos do transporte Socket.IO não executam ações. O servidor exige Host/Origin de loopback na mesma porta.
+
+O snapshot deve ser produzido pelo operador, com dados públicos mínimos e sem credenciais. Se estiver inválido, indisponível ou sem atualização há mais de 30 segundos, o Nexus deixa de confirmar atividade dos agentes. Serviço conectado e agente realmente trabalhando são estados distintos. Consulte [o contrato do snapshot e os limites deste modo](docs/EXTERNAL_FLEET.md).
+
+O [registro da interface do modo observador](docs/FLEET_UI.md) descreve os estados, o quadro responsivo e as diferenças para o modo padrão.
+
 ## Testes
 
 Os testes de servidor e frontend foram preservados, incluindo os que estavam somente na cópia local; foi acrescentado um teste dos defaults da edição aberta. Passaram 330 testes do servidor, 11 da interface, checagem de sintaxe, TypeScript, ESLint e build Vite. A execução usou fontes e dependências somente leitura, ambiente sem credenciais e rede externa bloqueada; os hashes permaneceram iguais. Execute `npm test` em `server` e `web-v2`, e `npm run build`/`npm run lint` em `web-v2`. Provedores reais, GitHub/GitLab, serviços externos e execução autônoma não foram exercitados por essa validação.
+
+O modo de equipe externa acrescenta seis regressões de servidor e cinco de interface, executadas separadamente pelo helper `scripts/check-fleet-offline.py` e pelo workflow `fleet-tests.yml`. As contagens e os helpers originais permanecem intactos. Exemplos: `python3 scripts/check-fleet-offline.py server --dependencies /caminho/deps-server/node_modules --node /caminho/node` e o mesmo comando com `web` e as dependências de `web-v2`. O helper usa `bwrap`, fontes/dependências somente leitura e ambiente sem credenciais; não instale dependências dentro desse sandbox.
 
 ## Resumo de estados de tarefas (sintético)
 
@@ -104,7 +122,7 @@ export function TaskBoardNoticeView({
 // <TaskBoardNoticeView connection="online" loading={false} taskCount={0} onRetry={() => {}} onCreateTask={() => {}} />
 ```
 
-Este exemplo e a API reutilizável de descritores são separados do `App`/`KanbanSidebar` existentes, que permanecem inalterados. Nenhuma renderização, interação de teclado/foco, conformidade de tecnologia assistiva, saúde de backend, anonimização, progresso ou segurança foi validada por esses testes puros; a integração real da UI e seus testes independentes de teclado/foco/ARIA continuam como trabalho revisado separado. Use apenas dados sintéticos, sem backend/provedor real ou configuração operacional.
+Este exemplo e a API reutilizável de descritores são separados do `App`/`KanbanSidebar`. Nenhuma renderização, interação de teclado/foco, conformidade de tecnologia assistiva, saúde de backend, anonimização, progresso ou segurança foi validada por esses testes puros. O modo de equipe externa descrito acima tem integração e regressões próprias; os testes deste descritor não comprovam essa integração. Use apenas dados sintéticos, sem backend/provedor real ou configuração operacional.
 
 ## Exclusões e licença
 
