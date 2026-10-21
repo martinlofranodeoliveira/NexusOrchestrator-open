@@ -1038,3 +1038,81 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_validator_readiness_descriptor.test.mjs`.
+
+
+<!-- community-core:task-status-descriptor -->
+### Task Status Descriptor for Kanban Rows
+
+Provides a small deterministic helper to describe single Kanban task status from a synthetic todo/doing/done/blocked flag, supporting consistent local badges without reading titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/task_status_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with string status equal to one of 'todo', 'doing', 'done', 'blocked'; extra properties are ignored and input is never mutated. Any malformed shape, missing field, null, array, non-plain-object or any status value outside the four literals throws TypeError('INVALID_TASK_STATUS_INPUT') without echoing input. On valid synthetic input return a fresh object with status, level, isTodo, isDoing, isDone, isBlocked where level is 0 for 'todo', 1 for 'doing', 2 for 'done', 3 for 'blocked', isTodo is true only when status equals 'todo', isDoing is true only when status equals 'doing', isDone is true only when status equals 'done', and isBlocked is true only when status equals 'blocked'. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about tasks, assignees, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "status": "todo"
+  },
+  "output": {
+    "isBlocked": false,
+    "isDoing": false,
+    "isDone": false,
+    "isTodo": true,
+    "level": 0,
+    "status": "todo"
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "status": "doing"
+  },
+  "output": {
+    "isBlocked": false,
+    "isDoing": true,
+    "isDone": false,
+    "isTodo": false,
+    "level": 1,
+    "status": "doing"
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "status": "done"
+  },
+  "output": {
+    "isBlocked": false,
+    "isDoing": false,
+    "isDone": true,
+    "isTodo": false,
+    "level": 2,
+    "status": "done"
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "status": "blocked"
+  },
+  "output": {
+    "isBlocked": true,
+    "isDoing": false,
+    "isDone": false,
+    "isTodo": false,
+    "level": 3,
+    "status": "blocked"
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_task_status_descriptor.test.mjs`.
