@@ -766,3 +766,62 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_room_floor_descriptor.test.mjs`.
+
+
+<!-- community-core:agent-presence-descriptor -->
+### Agent Presence Descriptor for Orchestrator Agents
+
+Provides a small deterministic helper to describe orchestrator agent presence from a synthetic total count, supporting consistent local handling without reading titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/agent_presence_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with integer total 0..10000; extra properties are ignored and input is never mutated. Any malformed shape, missing field, null, array, non-plain-object, non-integer, non-finite or out-of-range value throws TypeError('INVALID_AGENT_PRESENCE_INPUT') without echoing input. On valid synthetic input return a fresh object with total, isEmpty, hasAgents, isSingle, hasMultiple where isEmpty is true only when total equals 0, hasAgents is true only when total is greater than 0, isSingle is true only when total equals 1, and hasMultiple is true only when total is greater than 1. Build results only with object literals, use only for-of and Object.entries/values with Map get/set where needed, no dynamic computed property access, no property assignment/update/delete, no Object.assign/create and no aliased builtins. Computation is literal and makes no inference about tasks, rooms, teams, roles, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "total": 0
+  },
+  "output": {
+    "hasAgents": false,
+    "hasMultiple": false,
+    "isEmpty": true,
+    "isSingle": false,
+    "total": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "total": 1
+  },
+  "output": {
+    "hasAgents": true,
+    "hasMultiple": false,
+    "isEmpty": false,
+    "isSingle": true,
+    "total": 1
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "total": 5
+  },
+  "output": {
+    "hasAgents": true,
+    "hasMultiple": true,
+    "isEmpty": false,
+    "isSingle": false,
+    "total": 5
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_agent_presence_descriptor.test.mjs`.
