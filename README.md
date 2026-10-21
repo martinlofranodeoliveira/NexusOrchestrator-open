@@ -370,3 +370,71 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_lane_load_descriptor.test.mjs`.
+
+
+<!-- community-core:attention-health-descriptor -->
+### Attention Health Descriptor for Operations Attention
+
+Provides a small deterministic helper to describe operations attention health from synthetic healthy flag plus flagged and critical counts, letting the open edition render health badges consistently without reading task titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/attention_health_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with boolean healthy, integer flaggedCount 0..10000 and integer criticalCount 0..10000 where criticalCount is at most flaggedCount; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null, array, non-plain-object, non-boolean healthy, non-integer, non-finite, out-of-range counts or criticalCount above flaggedCount throws TypeError('INVALID_ATTENTION_HEALTH_INPUT') without echoing input. On valid synthetic input return a fresh object with healthy, flaggedCount, criticalCount, hasFlagged, hasCritical, needsReview where hasFlagged is flaggedCount greater than 0, hasCritical is criticalCount greater than 0, and needsReview is true when healthy is false or hasFlagged is true. Build results only with object literals, use only for-of and Object.entries/values with Map get/set where needed, no dynamic computed property access, no property assignment/update/delete, no Object.assign/create and no aliased builtins. Computation is literal and makes no inference about tasks, assignees, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "criticalCount": 0,
+    "flaggedCount": 0,
+    "healthy": true
+  },
+  "output": {
+    "criticalCount": 0,
+    "flaggedCount": 0,
+    "hasCritical": false,
+    "hasFlagged": false,
+    "healthy": true,
+    "needsReview": false
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "criticalCount": 1,
+    "flaggedCount": 2,
+    "healthy": true
+  },
+  "output": {
+    "criticalCount": 1,
+    "flaggedCount": 2,
+    "hasCritical": true,
+    "hasFlagged": true,
+    "healthy": true,
+    "needsReview": true
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "criticalCount": 0,
+    "flaggedCount": 0,
+    "healthy": false
+  },
+  "output": {
+    "criticalCount": 0,
+    "flaggedCount": 0,
+    "hasCritical": false,
+    "hasFlagged": false,
+    "healthy": false,
+    "needsReview": true
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_attention_health_descriptor.test.mjs`.
