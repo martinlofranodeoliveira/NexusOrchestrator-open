@@ -1116,3 +1116,68 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_task_status_descriptor.test.mjs`.
+
+
+<!-- community-core:task-stale-age-descriptor -->
+### Task Stale Age Descriptor for Operations Tasks
+
+Provides a small deterministic helper to describe operations task staleness from synthetic last-activity age and threshold, supporting consistent local staleness badges without reading titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/task_stale_age_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with integer staleThresholdMs 1..9007199254740991 and lastActivityAgeMs either integer 0..9007199254740991 or null; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null payload, array payload, non-plain-object, non-integer, non-finite, or out-of-range values throws TypeError('INVALID_TASK_STALE_AGE_INPUT') without echoing input. On valid synthetic input return a fresh object with staleThresholdMs, lastActivityAgeMs, hasKnownAge, isStale, overdueMs, needsReview where hasKnownAge is true only when lastActivityAgeMs is an integer, isStale is true only when hasKnownAge is true and lastActivityAgeMs is at or above staleThresholdMs, overdueMs is lastActivityAgeMs minus staleThresholdMs clamped to 0 and 0 when age is null, and needsReview mirrors isStale. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about teams, roles, tasks, agents, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "lastActivityAgeMs": 10000,
+    "staleThresholdMs": 60000
+  },
+  "output": {
+    "hasKnownAge": true,
+    "isStale": false,
+    "lastActivityAgeMs": 10000,
+    "needsReview": false,
+    "overdueMs": 0,
+    "staleThresholdMs": 60000
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "lastActivityAgeMs": 90000,
+    "staleThresholdMs": 60000
+  },
+  "output": {
+    "hasKnownAge": true,
+    "isStale": true,
+    "lastActivityAgeMs": 90000,
+    "needsReview": true,
+    "overdueMs": 30000,
+    "staleThresholdMs": 60000
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "lastActivityAgeMs": null,
+    "staleThresholdMs": 60000
+  },
+  "output": {
+    "hasKnownAge": false,
+    "isStale": false,
+    "lastActivityAgeMs": null,
+    "needsReview": false,
+    "overdueMs": 0,
+    "staleThresholdMs": 60000
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_task_stale_age_descriptor.test.mjs`.
