@@ -1181,3 +1181,74 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_task_stale_age_descriptor.test.mjs`.
+
+
+<!-- community-core:provider-env-hint-descriptor -->
+### Provider Env Hint Descriptor for Validator Hints
+
+Provides a small deterministic helper to describe validator provider hint readiness from synthetic scope, ok and optional flags, enabling consistent local handling without reading environment, credentials, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/provider_env_hint_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with string scope equal to one of 'auth', 'metadata', boolean ok and boolean optional; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null payload, array payload, non-plain-object, non-string scope outside the two literals, non-boolean ok or non-boolean optional throws TypeError('INVALID_PROVIDER_ENV_HINT_INPUT') without echoing input. On valid synthetic input return a fresh object with scope, ok, optional, isAuth, isMetadata, isReady, needsSetup where isAuth is true only when scope equals 'auth', isMetadata is true only when scope equals 'metadata', isReady mirrors ok, and needsSetup is true only when ok is false and optional is false. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about providers, credentials, environment, tasks, agents, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "ok": true,
+    "optional": false,
+    "scope": "auth"
+  },
+  "output": {
+    "isAuth": true,
+    "isMetadata": false,
+    "isReady": true,
+    "needsSetup": false,
+    "ok": true,
+    "optional": false,
+    "scope": "auth"
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "ok": false,
+    "optional": true,
+    "scope": "metadata"
+  },
+  "output": {
+    "isAuth": false,
+    "isMetadata": true,
+    "isReady": false,
+    "needsSetup": false,
+    "ok": false,
+    "optional": true,
+    "scope": "metadata"
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "ok": false,
+    "optional": false,
+    "scope": "auth"
+  },
+  "output": {
+    "isAuth": true,
+    "isMetadata": false,
+    "isReady": false,
+    "needsSetup": true,
+    "ok": false,
+    "optional": false,
+    "scope": "auth"
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_provider_env_hint_descriptor.test.mjs`.
