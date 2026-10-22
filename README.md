@@ -1979,3 +1979,68 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_attention_stale_severity_descriptor.test.mjs`.
+
+
+<!-- community-core:lane-failure-presence-descriptor -->
+### Lane Failure Presence Descriptor for Operations Lanes
+
+Provides a small deterministic helper to describe operations lane failure presence from synthetic failureClass and failureMessage values, supporting consistent local handling without interpreting message text, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/lane_failure_presence_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with failureClass null or string length 0..500 and failureMessage null or string length 0..500; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null payload, array payload, non-plain-object, non-null/string type or string length above 500 throws TypeError('INVALID_LANE_FAILURE_PRESENCE_INPUT') without echoing input. On valid synthetic input return a fresh object with failureClass, failureMessage, hasFailureClass, hasFailureMessage, failed, clear where the first two preserve input values, hasFailureClass is true only when failureClass is a string with length above 0, hasFailureMessage is true only when failureMessage is a string with length above 0, failed is true only when hasFailureClass or hasFailureMessage is true, and clear is true only when both hasFailureClass and hasFailureMessage are false. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about teams, roles, tasks, agents, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "failureClass": null,
+    "failureMessage": null
+  },
+  "output": {
+    "clear": true,
+    "failed": false,
+    "failureClass": null,
+    "failureMessage": null,
+    "hasFailureClass": false,
+    "hasFailureMessage": false
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "failureClass": "TIMEOUT",
+    "failureMessage": ""
+  },
+  "output": {
+    "clear": false,
+    "failed": true,
+    "failureClass": "TIMEOUT",
+    "failureMessage": "",
+    "hasFailureClass": true,
+    "hasFailureMessage": false
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "failureClass": "RETRY_EXHAUSTED",
+    "failureMessage": "lane failed after retries"
+  },
+  "output": {
+    "clear": false,
+    "failed": true,
+    "failureClass": "RETRY_EXHAUSTED",
+    "failureMessage": "lane failed after retries",
+    "hasFailureClass": true,
+    "hasFailureMessage": true
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_lane_failure_presence_descriptor.test.mjs`.
