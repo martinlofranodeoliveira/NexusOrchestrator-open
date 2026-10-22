@@ -1829,3 +1829,71 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_github_sync_readiness_descriptor.test.mjs`.
+
+
+<!-- community-core:attention-assignment-gap-descriptor -->
+### Attention Assignment Gap Descriptor for Operations Tasks
+
+Provides a small deterministic helper to describe operations attention assignment gaps from synthetic activeWithoutAssigneeCount and waitingWithoutExecutionCount values, supporting consistent local handling without reading task titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/attention_assignment_gap_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with integer activeWithoutAssigneeCount 0..10000 and integer waitingWithoutExecutionCount 0..10000; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null payload, array payload, non-plain-object, non-integer, non-finite or out-of-range values throws TypeError('INVALID_ATTENTION_ASSIGNMENT_GAP_INPUT') without echoing input. On valid synthetic input return a fresh object with activeWithoutAssigneeCount, waitingWithoutExecutionCount, totalGap, hasGap, needsAssignment, needsExecution, clear where the first two preserve input values, totalGap is the arithmetic sum of both inputs, hasGap is true only when totalGap is above 0, needsAssignment is true only when activeWithoutAssigneeCount is above 0, needsExecution is true only when waitingWithoutExecutionCount is above 0, and clear is true only when totalGap equals 0. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about teams, roles, tasks, agents, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "activeWithoutAssigneeCount": 0,
+    "waitingWithoutExecutionCount": 0
+  },
+  "output": {
+    "activeWithoutAssigneeCount": 0,
+    "clear": true,
+    "hasGap": false,
+    "needsAssignment": false,
+    "needsExecution": false,
+    "totalGap": 0,
+    "waitingWithoutExecutionCount": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "activeWithoutAssigneeCount": 2,
+    "waitingWithoutExecutionCount": 0
+  },
+  "output": {
+    "activeWithoutAssigneeCount": 2,
+    "clear": false,
+    "hasGap": true,
+    "needsAssignment": true,
+    "needsExecution": false,
+    "totalGap": 2,
+    "waitingWithoutExecutionCount": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "activeWithoutAssigneeCount": 1,
+    "waitingWithoutExecutionCount": 3
+  },
+  "output": {
+    "activeWithoutAssigneeCount": 1,
+    "clear": false,
+    "hasGap": true,
+    "needsAssignment": true,
+    "needsExecution": true,
+    "totalGap": 4,
+    "waitingWithoutExecutionCount": 3
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_attention_assignment_gap_descriptor.test.mjs`.
