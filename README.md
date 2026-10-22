@@ -1747,3 +1747,85 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_ralph_failure_budget_descriptor.test.mjs`.
+
+
+<!-- community-core:github-sync-readiness-descriptor -->
+### GitHub Sync Readiness Descriptor for Project Mirroring
+
+Provides a small deterministic helper to describe project mirroring readiness from synthetic githubConfigured and projectSyncEnabled flags, supporting consistent local handling without reading files, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/github_sync_readiness_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with boolean githubConfigured and boolean projectSyncEnabled; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null payload, array payload, non-plain-object, or non-boolean values throws TypeError('INVALID_GITHUB_SYNC_READINESS_INPUT') without echoing input. On valid synthetic input return a fresh object with githubConfigured, projectSyncEnabled, ready, partial, idle, needsSetup where the first two preserve input values, ready is true only when both inputs are true, idle is true only when both inputs are false, partial is true only when exactly one input is true, and needsSetup is true only when ready is false. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about teams, roles, tasks, agents, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "githubConfigured": false,
+    "projectSyncEnabled": false
+  },
+  "output": {
+    "githubConfigured": false,
+    "idle": true,
+    "needsSetup": true,
+    "partial": false,
+    "projectSyncEnabled": false,
+    "ready": false
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "githubConfigured": false,
+    "projectSyncEnabled": true
+  },
+  "output": {
+    "githubConfigured": false,
+    "idle": false,
+    "needsSetup": true,
+    "partial": true,
+    "projectSyncEnabled": true,
+    "ready": false
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "githubConfigured": true,
+    "projectSyncEnabled": false
+  },
+  "output": {
+    "githubConfigured": true,
+    "idle": false,
+    "needsSetup": true,
+    "partial": true,
+    "projectSyncEnabled": false,
+    "ready": false
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "githubConfigured": true,
+    "projectSyncEnabled": true
+  },
+  "output": {
+    "githubConfigured": true,
+    "idle": false,
+    "needsSetup": false,
+    "partial": false,
+    "projectSyncEnabled": true,
+    "ready": true
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_github_sync_readiness_descriptor.test.mjs`.
