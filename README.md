@@ -1682,3 +1682,68 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_attention_queue_depth_descriptor.test.mjs`.
+
+
+<!-- community-core:ralph-failure-budget-descriptor -->
+### Ralph Failure Budget Descriptor for Extension Health
+
+Provides a small deterministic helper to describe Ralph extension failure budget from synthetic failureCount and failureLimit counts, supporting consistent local handling without reading titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/ralph_failure_budget_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with integer failureCount 0..10000 and integer failureLimit 0..10000, each finite safe; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null payload, array payload, non-plain-object, non-integer value, non-finite value or out-of-range value throws TypeError('INVALID_RALPH_FAILURE_BUDGET_INPUT') without echoing input. On valid synthetic input return a fresh object with failureCount, failureLimit, remaining, hasBudget, atLimit, overLimit where the first two preserve input values, remaining equals failureLimit minus failureCount clamped to 0, hasBudget is true only when failureCount is below failureLimit, atLimit is true only when both are equal, and overLimit is true only when failureCount is above failureLimit. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about teams, roles, tasks, agents, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "failureCount": 0,
+    "failureLimit": 3
+  },
+  "output": {
+    "atLimit": false,
+    "failureCount": 0,
+    "failureLimit": 3,
+    "hasBudget": true,
+    "overLimit": false,
+    "remaining": 3
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "failureCount": 3,
+    "failureLimit": 3
+  },
+  "output": {
+    "atLimit": true,
+    "failureCount": 3,
+    "failureLimit": 3,
+    "hasBudget": false,
+    "overLimit": false,
+    "remaining": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "failureCount": 5,
+    "failureLimit": 2
+  },
+  "output": {
+    "atLimit": false,
+    "failureCount": 5,
+    "failureLimit": 2,
+    "hasBudget": false,
+    "overLimit": true,
+    "remaining": 0
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_ralph_failure_budget_descriptor.test.mjs`.
