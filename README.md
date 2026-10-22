@@ -1897,3 +1897,85 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_attention_assignment_gap_descriptor.test.mjs`.
+
+
+<!-- community-core:attention-stale-severity-descriptor -->
+### Attention Stale Severity Descriptor for Operations Tasks
+
+Provides a small deterministic helper to describe operations attention need from a synthetic stale flag and severity value, supporting consistent local handling without reading task titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/attention_stale_severity_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection or dependencies. Input must be a plain object with stale boolean and severity string equal to one of 'ok', 'info', 'medium', 'high', 'critical'; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null payload, array payload, non-plain-object, non-boolean stale or any severity value outside the five literals throws TypeError('INVALID_ATTENTION_STALE_SEVERITY_INPUT') without echoing input. On valid synthetic input return a fresh object with stale, severity, level, requiresAttention, isCritical, isClear where level is 0 for 'ok', 1 for 'info', 2 for 'medium', 3 for 'high', 4 for 'critical', requiresAttention is true only when stale is true or level is at or above 2, isCritical is true only when severity equals 'critical', and isClear is true only when stale is false and severity equals 'ok'. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about tasks, assignees, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "severity": "ok",
+    "stale": false
+  },
+  "output": {
+    "isClear": true,
+    "isCritical": false,
+    "level": 0,
+    "requiresAttention": false,
+    "severity": "ok",
+    "stale": false
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "severity": "high",
+    "stale": false
+  },
+  "output": {
+    "isClear": false,
+    "isCritical": false,
+    "level": 3,
+    "requiresAttention": true,
+    "severity": "high",
+    "stale": false
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "severity": "info",
+    "stale": true
+  },
+  "output": {
+    "isClear": false,
+    "isCritical": false,
+    "level": 1,
+    "requiresAttention": true,
+    "severity": "info",
+    "stale": true
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "severity": "critical",
+    "stale": false
+  },
+  "output": {
+    "isClear": false,
+    "isCritical": true,
+    "level": 4,
+    "requiresAttention": true,
+    "severity": "critical",
+    "stale": false
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_attention_stale_severity_descriptor.test.mjs`.
