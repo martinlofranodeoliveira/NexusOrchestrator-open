@@ -2540,3 +2540,68 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_room_available_slots_descriptor.test.mjs`.
+
+
+<!-- community-core:attention-waiting-share-descriptor -->
+### Attention Waiting Share Descriptor for Operations Tasks
+
+Provides a small deterministic helper to describe operations attention waiting-without-execution share from synthetic totals, supporting consistent local review of coordination backlog without reading titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/attention_waiting_share_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Input must be a plain object with integer totalActivePrimaryTasks 0..10000 and integer waitingWithoutExecutionCount 0..10000 where waitingWithoutExecutionCount is at or below totalActivePrimaryTasks; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null payload, array payload, non-plain-object, non-integer, non-finite, out-of-range values or waiting above total throws TypeError('INVALID_ATTENTION_WAITING_SHARE_INPUT') without echoing input. On valid synthetic input return a fresh object with totalActivePrimaryTasks, waitingWithoutExecutionCount, readyCount, hasWaiting, allWaiting, noneWaiting where the first two preserve input values, readyCount is totalActivePrimaryTasks minus waitingWithoutExecutionCount, hasWaiting is true only when waitingWithoutExecutionCount is above 0, allWaiting is true only when totalActivePrimaryTasks is above 0 and waiting equals total, and noneWaiting is true only when waiting equals 0. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about teams, roles, tasks, agents, progress, priority or next steps and never contacts backends or agents. This module is independently tested; application/UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "totalActivePrimaryTasks": 0,
+    "waitingWithoutExecutionCount": 0
+  },
+  "output": {
+    "allWaiting": false,
+    "hasWaiting": false,
+    "noneWaiting": true,
+    "readyCount": 0,
+    "totalActivePrimaryTasks": 0,
+    "waitingWithoutExecutionCount": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "totalActivePrimaryTasks": 4,
+    "waitingWithoutExecutionCount": 1
+  },
+  "output": {
+    "allWaiting": false,
+    "hasWaiting": true,
+    "noneWaiting": false,
+    "readyCount": 3,
+    "totalActivePrimaryTasks": 4,
+    "waitingWithoutExecutionCount": 1
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "totalActivePrimaryTasks": 3,
+    "waitingWithoutExecutionCount": 3
+  },
+  "output": {
+    "allWaiting": true,
+    "hasWaiting": true,
+    "noneWaiting": false,
+    "readyCount": 0,
+    "totalActivePrimaryTasks": 3,
+    "waitingWithoutExecutionCount": 3
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_attention_waiting_share_descriptor.test.mjs`.
