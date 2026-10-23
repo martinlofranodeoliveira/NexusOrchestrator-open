@@ -2126,3 +2126,74 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_lane_event_failure_count_descriptor.test.mjs`.
+
+
+<!-- community-core:lane-event-sequence-gap-descriptor -->
+### Lane Event Sequence Gap Descriptor for Operations Lanes
+
+Provides a small deterministic helper to describe gaps in operations lane event sequences from synthetic first, last and total counts, supporting consistent local review of module coordination without interpreting message text, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/lane_event_sequence_gap_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Input must be a plain object with firstSeq integer 0..1000000, lastSeq integer 0..1000000 and total integer 0..1000000 where firstSeq is at or below lastSeq; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null payload, array payload, non-plain-object, non-integer, non-finite, out-of-range or firstSeq above lastSeq throws TypeError('INVALID_LANE_EVENT_SEQUENCE_GAP_INPUT') without echoing input. On valid synthetic input return a fresh object with firstSeq, lastSeq, total, expected, missing, hasGap, contiguous where the first three preserve input values, expected is lastSeq minus firstSeq plus 1, missing is expected minus total clamped to 0, hasGap is true only when missing is above 0, and contiguous is true only when missing equals 0. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about teams, roles, tasks, agents, progress, priority or next steps and never contacts backends or agents. This module is independently tested; application/UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "firstSeq": 10,
+    "lastSeq": 12,
+    "total": 3
+  },
+  "output": {
+    "contiguous": true,
+    "expected": 3,
+    "firstSeq": 10,
+    "hasGap": false,
+    "lastSeq": 12,
+    "missing": 0,
+    "total": 3
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "firstSeq": 10,
+    "lastSeq": 14,
+    "total": 3
+  },
+  "output": {
+    "contiguous": false,
+    "expected": 5,
+    "firstSeq": 10,
+    "hasGap": true,
+    "lastSeq": 14,
+    "missing": 2,
+    "total": 3
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "firstSeq": 5,
+    "lastSeq": 5,
+    "total": 1
+  },
+  "output": {
+    "contiguous": true,
+    "expected": 1,
+    "firstSeq": 5,
+    "hasGap": false,
+    "lastSeq": 5,
+    "missing": 0,
+    "total": 1
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_lane_event_sequence_gap_descriptor.test.mjs`.
