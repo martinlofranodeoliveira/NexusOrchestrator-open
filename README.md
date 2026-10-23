@@ -2197,3 +2197,68 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_lane_event_sequence_gap_descriptor.test.mjs`.
+
+
+<!-- community-core:attention-flagged-share-descriptor -->
+### Attention Flagged Share Descriptor for Operations Attention
+
+Provides a small deterministic helper to describe operations attention flagged share from synthetic flaggedCount and criticalCount values, supporting consistent local review of coordination needs without reading task titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/attention_flagged_share_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Input must be a plain object with flaggedCount integer 0..1000000 and criticalCount integer 0..1000000 where criticalCount is at or below flaggedCount; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null payload, array payload, non-plain-object, non-integer, non-finite, out-of-range or criticalCount above flaggedCount throws TypeError('INVALID_ATTENTION_FLAGGED_SHARE_INPUT') without echoing input. On valid synthetic input return a fresh object with flaggedCount, criticalCount, nonCriticalFlagged, hasFlagged, hasCritical, allCritical where the first two preserve input values, nonCriticalFlagged is flaggedCount minus criticalCount, hasFlagged is true only when flaggedCount is above 0, hasCritical is true only when criticalCount is above 0, and allCritical is true only when flaggedCount is above 0 and equals criticalCount. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about teams, roles, tasks, agents, progress, priority or next steps and never contacts backends or agents. This module is independently tested; application/UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "criticalCount": 0,
+    "flaggedCount": 0
+  },
+  "output": {
+    "allCritical": false,
+    "criticalCount": 0,
+    "flaggedCount": 0,
+    "hasCritical": false,
+    "hasFlagged": false,
+    "nonCriticalFlagged": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "criticalCount": 1,
+    "flaggedCount": 3
+  },
+  "output": {
+    "allCritical": false,
+    "criticalCount": 1,
+    "flaggedCount": 3,
+    "hasCritical": true,
+    "hasFlagged": true,
+    "nonCriticalFlagged": 2
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "criticalCount": 2,
+    "flaggedCount": 2
+  },
+  "output": {
+    "allCritical": true,
+    "criticalCount": 2,
+    "flaggedCount": 2,
+    "hasCritical": true,
+    "hasFlagged": true,
+    "nonCriticalFlagged": 0
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_attention_flagged_share_descriptor.test.mjs`.
