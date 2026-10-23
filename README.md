@@ -2050,3 +2050,79 @@ Public regression tests: `lab_tests/community_lane_failure_presence_descriptor.t
 O módulo opcional [AgentCollaboration](docs/AGENT_COLLABORATION.md) acrescenta um registro explícito de planejadores/executores e pedidos de ajuda estruturados, com revisão concorrente, idempotência, dependências acíclicas, reserva com token e limite de delegações. Distingue pedido aceito, reserva e resultado; oferece exportação/importação por replay. Políticas incluem preferência Muse/Gemini, Codex limitado por dia e um slot agregado local.
 
 É uma biblioteca pura para integração por um controlador confiável. Não chama modelos, não concede acesso, não verifica PUBLIC/HEAD nem substitui testes, processos ou autorização do adaptador. O workflow `collaboration-tests.yml` executa sua suíte separada sem rede, fontes graváveis, home ou credenciais. Isso não altera o opt-in dos executores do servidor padrão.
+
+
+<!-- community-core:lane-event-failure-count-descriptor -->
+### Lane Event Failure Count Descriptor for Operations Lanes
+
+Provides a small deterministic helper to count operations lane events with failure markers from synthetic event lists, supporting consistent local review of dependencies without interpreting message text, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/lane_event_failure_count_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Input must be a plain object with events array length 0..200 where each element is a plain object with failureClass null or string length 0..500; extra properties on outer and inner objects are ignored and input is never mutated. Any malformed shape, missing field, null payload, array payload, non-plain-object, non-array events, length above 200, non-plain-object element, missing failureClass, non-null/string type or string length above 500 throws TypeError('INVALID_LANE_EVENT_FAILURE_COUNT_INPUT') without echoing input. On valid synthetic input return a fresh object with total, failedCount, clearCount, hasFailures, allClear where total is events length, failedCount counts elements where failureClass is a string with length above 0, clearCount is total minus failedCount, hasFailures is true only when failedCount is above 0, and allClear is true only when failedCount equals 0. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about teams, roles, tasks, agents, progress, priority or next steps and never contacts backends or agents.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "events": []
+  },
+  "output": {
+    "allClear": true,
+    "clearCount": 0,
+    "failedCount": 0,
+    "hasFailures": false,
+    "total": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "events": [
+      {
+        "failureClass": null
+      },
+      {
+        "failureClass": ""
+      },
+      {
+        "failureClass": "TIMEOUT"
+      }
+    ]
+  },
+  "output": {
+    "allClear": false,
+    "clearCount": 2,
+    "failedCount": 1,
+    "hasFailures": true,
+    "total": 3
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "events": [
+      {
+        "failureClass": "AUTH"
+      },
+      {
+        "failureClass": "NETWORK"
+      }
+    ]
+  },
+  "output": {
+    "allClear": false,
+    "clearCount": 0,
+    "failedCount": 2,
+    "hasFailures": true,
+    "total": 2
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_lane_event_failure_count_descriptor.test.mjs`.
