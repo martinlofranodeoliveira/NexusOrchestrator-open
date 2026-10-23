@@ -1,0 +1,26 @@
+name: Offline agent collaboration
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  collaboration:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+      - name: Install hosted isolation runtime
+        run: sudo -n -- apt-get update -qq && sudo -n -- apt-get install -y bubblewrap
+      - name: Run collaboration tests with only source and tests mounted
+        run: |
+          sudo -n -- /usr/bin/bwrap --unshare-all --die-with-parent --new-session --cap-drop ALL --clearenv \
+            --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 \
+            --proc /proc --dev /dev --tmpfs /tmp --setenv HOME /nonexistent \
+            --setenv PATH /usr/bin:/bin --ro-bind "$(command -v node)" /opt/node \
+            --ro-bind "$GITHUB_WORKSPACE/server/services/agentCollaboration.js" /work/server/services/agentCollaboration.js \
+            --ro-bind "$GITHUB_WORKSPACE/server/tests/agentCollaboration.test.js" /work/server/tests/agentCollaboration.test.js \
+            --chdir /work/server /opt/node --test tests/agentCollaboration.test.js

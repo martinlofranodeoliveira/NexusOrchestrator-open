@@ -2044,3 +2044,9 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_lane_failure_presence_descriptor.test.mjs`.
+
+## Coordenação por capacidade e pedidos de ajuda
+
+O módulo opcional [AgentCollaboration](docs/AGENT_COLLABORATION.md) acrescenta um registro explícito de planejadores/executores e pedidos de ajuda estruturados, com revisão concorrente, idempotência, dependências acíclicas, reserva com token e limite de delegações. Distingue pedido aceito, reserva e resultado; oferece exportação/importação por replay. Políticas incluem preferência Muse/Gemini, Codex limitado por dia e um slot agregado local.
+
+É uma biblioteca pura para integração por um controlador confiável. Não chama modelos, não concede acesso, não verifica PUBLIC/HEAD nem substitui testes, processos ou autorização do adaptador. O workflow `collaboration-tests.yml` executa sua suíte separada sem rede, fontes graváveis, home ou credenciais. Isso não altera o opt-in dos executores do servidor padrão.
