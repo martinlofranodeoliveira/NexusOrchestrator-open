@@ -2469,3 +2469,74 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_ralph_activation_descriptor.test.mjs`.
+
+
+<!-- community-core:room-available-slots-descriptor -->
+### Room Available Slots Consistency Descriptor for Pixel Office
+
+Provides a small deterministic helper to compare synthetic room availableSlots against configuredSlots and occupants, supporting consistent local capacity review without reading room content, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/room_available_slots_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Input must be a plain object with integer configuredSlots 0..10000, integer occupants 0..10000 and integer availableSlots 0..10000; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null payload, array payload, non-plain-object, non-integer, non-finite or out-of-range values throws TypeError('INVALID_ROOM_AVAILABILITY_INPUT') without echoing input. On valid synthetic input return a fresh object with configuredSlots, occupants, availableSlots, expectedAvailable, matches, understated, overstated where the first three preserve input values, expectedAvailable is configuredSlots minus occupants clamped to 0, matches is true only when availableSlots equals expectedAvailable, understated is true only when availableSlots is below expectedAvailable, and overstated is true only when availableSlots is above expectedAvailable. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about teams, roles, tasks, agents, progress, priority or next steps and never contacts backends or agents. This module is independently tested; application/UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "availableSlots": 3,
+    "configuredSlots": 4,
+    "occupants": 1
+  },
+  "output": {
+    "availableSlots": 3,
+    "configuredSlots": 4,
+    "expectedAvailable": 3,
+    "matches": true,
+    "occupants": 1,
+    "overstated": false,
+    "understated": false
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "availableSlots": 2,
+    "configuredSlots": 4,
+    "occupants": 4
+  },
+  "output": {
+    "availableSlots": 2,
+    "configuredSlots": 4,
+    "expectedAvailable": 0,
+    "matches": false,
+    "occupants": 4,
+    "overstated": true,
+    "understated": false
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "availableSlots": 0,
+    "configuredSlots": 2,
+    "occupants": 5
+  },
+  "output": {
+    "availableSlots": 0,
+    "configuredSlots": 2,
+    "expectedAvailable": 0,
+    "matches": true,
+    "occupants": 5,
+    "overstated": false,
+    "understated": false
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_room_available_slots_descriptor.test.mjs`.
