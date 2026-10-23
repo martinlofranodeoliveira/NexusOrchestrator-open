@@ -2262,3 +2262,68 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_attention_flagged_share_descriptor.test.mjs`.
+
+
+<!-- community-core:lane-command-recovery-descriptor -->
+### Lane Command Recovery Descriptor for Operations Lanes
+
+Provides a small deterministic helper to describe operations lane recovery pressure from synthetic retryCount and commandRecoveryCount values, supporting consistent local review of module coordination without interpreting message text, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/lane_command_recovery_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Input must be a plain object with retryCount integer 0..1000000 and commandRecoveryCount integer 0..1000000; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null payload, array payload, non-plain-object, non-integer, non-finite or out-of-range throws TypeError('INVALID_LANE_COMMAND_RECOVERY_INPUT') without echoing input. On valid synthetic input return a fresh object with retryCount, commandRecoveryCount, totalRecoveries, hasRetries, hasCommandRecoveries, hasAnyRecovery where the first two preserve input values, totalRecoveries is retryCount plus commandRecoveryCount, hasRetries is true only when retryCount is above 0, hasCommandRecoveries is true only when commandRecoveryCount is above 0, and hasAnyRecovery is true only when totalRecoveries is above 0. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about teams, roles, tasks, agents, progress, priority or next steps and never contacts backends or agents. This module is independently tested; application/UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "commandRecoveryCount": 0,
+    "retryCount": 0
+  },
+  "output": {
+    "commandRecoveryCount": 0,
+    "hasAnyRecovery": false,
+    "hasCommandRecoveries": false,
+    "hasRetries": false,
+    "retryCount": 0,
+    "totalRecoveries": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "commandRecoveryCount": 1,
+    "retryCount": 2
+  },
+  "output": {
+    "commandRecoveryCount": 1,
+    "hasAnyRecovery": true,
+    "hasCommandRecoveries": true,
+    "hasRetries": true,
+    "retryCount": 2,
+    "totalRecoveries": 3
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "commandRecoveryCount": 5,
+    "retryCount": 0
+  },
+  "output": {
+    "commandRecoveryCount": 5,
+    "hasAnyRecovery": true,
+    "hasCommandRecoveries": true,
+    "hasRetries": false,
+    "retryCount": 0,
+    "totalRecoveries": 5
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_lane_command_recovery_descriptor.test.mjs`.
