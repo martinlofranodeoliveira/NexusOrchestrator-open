@@ -2670,3 +2670,68 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_attention_critical_share_descriptor.test.mjs`.
+
+
+<!-- community-core:collaboration-active-share-descriptor -->
+### Collaboration Active Share Descriptor for Coordination Review
+
+Provides a small deterministic helper to describe the share of active collaborations among total collaborations from synthetic NexusOrchestrator operations totals, supporting consistent local review of cross-module coordination backlog without reading titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/collaboration_active_share_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Input must be a plain object with integer totalCollaborations 0..10000 and integer activeCollaborations 0..10000 where activeCollaborations is at or below totalCollaborations; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null payload, array payload, non-plain-object, non-integer, non-finite, out-of-range values or active above total throws TypeError('INVALID_COLLABORATION_ACTIVE_SHARE_INPUT') without echoing input. On valid synthetic input return a fresh object with totalCollaborations, activeCollaborations, idleCount, hasActive, allActive, noneActive where the first two preserve input values, idleCount is totalCollaborations minus activeCollaborations, hasActive is true only when activeCollaborations is above 0, allActive is true only when totalCollaborations is above 0 and active equals total, and noneActive is true only when active equals 0. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about teams, roles, tasks, agents, progress, priority or next steps and never contacts backends or agents. This module is independently tested; application/UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "activeCollaborations": 1,
+    "totalCollaborations": 3
+  },
+  "output": {
+    "activeCollaborations": 1,
+    "allActive": false,
+    "hasActive": true,
+    "idleCount": 2,
+    "noneActive": false,
+    "totalCollaborations": 3
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "activeCollaborations": 0,
+    "totalCollaborations": 0
+  },
+  "output": {
+    "activeCollaborations": 0,
+    "allActive": false,
+    "hasActive": false,
+    "idleCount": 0,
+    "noneActive": true,
+    "totalCollaborations": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "activeCollaborations": 2,
+    "totalCollaborations": 2
+  },
+  "output": {
+    "activeCollaborations": 2,
+    "allActive": true,
+    "hasActive": true,
+    "idleCount": 0,
+    "noneActive": false,
+    "totalCollaborations": 2
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_collaboration_active_share_descriptor.test.mjs`.
