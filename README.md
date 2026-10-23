@@ -2395,3 +2395,77 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_stale_threshold_order_descriptor.test.mjs`.
+
+
+<!-- community-core:ralph-activation-descriptor -->
+### Ralph Activation Descriptor for Operations Settings
+
+Provides a small deterministic helper to describe Ralph extension activation stage from synthetic configured, installed and active flags, supporting consistent local review of setup dependencies without reading task content, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/ralph_activation_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Input must be a plain object with boolean ralphExtensionConfigured, boolean ralphExtensionInstalled and boolean ralphExtensionActive; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null payload, array payload, non-plain-object or non-boolean flags throws TypeError('INVALID_RALPH_ACTIVATION_INPUT') without echoing input. On valid synthetic input return a fresh object with ralphExtensionConfigured, ralphExtensionInstalled, ralphExtensionActive, activationLevel, fullyActive, inactive, consistent, activatable where the first three preserve input values, activationLevel is 0..3 count of true flags, fullyActive is true only when all three are true, inactive is true only when all three are false, consistent is true only when (!ralphExtensionActive || (ralphExtensionInstalled && ralphExtensionConfigured)) && (!ralphExtensionInstalled || ralphExtensionConfigured), and activatable is true only when ralphExtensionConfigured and ralphExtensionInstalled are true and ralphExtensionActive is false. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about teams, roles, tasks, agents, progress, priority or next steps and never contacts backends or agents. This module is independently tested; application/UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "ralphExtensionActive": false,
+    "ralphExtensionConfigured": false,
+    "ralphExtensionInstalled": false
+  },
+  "output": {
+    "activatable": false,
+    "activationLevel": 0,
+    "consistent": true,
+    "fullyActive": false,
+    "inactive": true,
+    "ralphExtensionActive": false,
+    "ralphExtensionConfigured": false,
+    "ralphExtensionInstalled": false
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "ralphExtensionActive": false,
+    "ralphExtensionConfigured": true,
+    "ralphExtensionInstalled": true
+  },
+  "output": {
+    "activatable": true,
+    "activationLevel": 2,
+    "consistent": true,
+    "fullyActive": false,
+    "inactive": false,
+    "ralphExtensionActive": false,
+    "ralphExtensionConfigured": true,
+    "ralphExtensionInstalled": true
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "ralphExtensionActive": true,
+    "ralphExtensionConfigured": false,
+    "ralphExtensionInstalled": false
+  },
+  "output": {
+    "activatable": false,
+    "activationLevel": 1,
+    "consistent": false,
+    "fullyActive": false,
+    "inactive": false,
+    "ralphExtensionActive": true,
+    "ralphExtensionConfigured": false,
+    "ralphExtensionInstalled": false
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_ralph_activation_descriptor.test.mjs`.
