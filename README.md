@@ -2327,3 +2327,71 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_lane_command_recovery_descriptor.test.mjs`.
+
+
+<!-- community-core:stale-threshold-order-descriptor -->
+### Stale Threshold Order Descriptor for Operations Tasks
+
+Provides a small deterministic helper to describe operations stale-threshold order from synthetic active and review threshold values, supporting consistent local review of monitoring dependencies without reading task content, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/stale_threshold_order_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Input must be a plain object with activeTaskStaleMs integer 0..1000000000 and reviewTaskStaleMs integer 0..1000000000; extra properties are ignored and input is never mutated. Any malformed shape, missing fields, null payload, array payload, non-plain-object, non-integer, non-finite or out-of-range throws TypeError('INVALID_STALE_THRESHOLD_ORDER_INPUT') without echoing input. On valid synthetic input return a fresh object with activeTaskStaleMs, reviewTaskStaleMs, minThreshold, maxThreshold, equal, activeIsLower, reviewIsLower where the first two preserve input values, minThreshold is the smaller of the two values, maxThreshold is the larger of the two values, equal is true only when both values are equal, activeIsLower is true only when activeTaskStaleMs is below reviewTaskStaleMs, and reviewIsLower is true only when reviewTaskStaleMs is below activeTaskStaleMs. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about teams, roles, tasks, agents, progress, priority or next steps and never contacts backends or agents. This module is independently tested; application/UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "activeTaskStaleMs": 1000,
+    "reviewTaskStaleMs": 2000
+  },
+  "output": {
+    "activeIsLower": true,
+    "activeTaskStaleMs": 1000,
+    "equal": false,
+    "maxThreshold": 2000,
+    "minThreshold": 1000,
+    "reviewIsLower": false,
+    "reviewTaskStaleMs": 2000
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "activeTaskStaleMs": 5000,
+    "reviewTaskStaleMs": 5000
+  },
+  "output": {
+    "activeIsLower": false,
+    "activeTaskStaleMs": 5000,
+    "equal": true,
+    "maxThreshold": 5000,
+    "minThreshold": 5000,
+    "reviewIsLower": false,
+    "reviewTaskStaleMs": 5000
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "activeTaskStaleMs": 9000,
+    "reviewTaskStaleMs": 3000
+  },
+  "output": {
+    "activeIsLower": false,
+    "activeTaskStaleMs": 9000,
+    "equal": false,
+    "maxThreshold": 9000,
+    "minThreshold": 3000,
+    "reviewIsLower": true,
+    "reviewTaskStaleMs": 3000
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_stale_threshold_order_descriptor.test.mjs`.
