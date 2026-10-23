@@ -17,10 +17,18 @@ jobs:
         run: sudo -n -- apt-get update -qq && sudo -n -- apt-get install -y bubblewrap
       - name: Run collaboration tests with only source and tests mounted
         run: |
+          # Only these two already-public files enter a readable staging dir.
+          # Rootless user namespaces on hosted runners cannot traverse runner's home.
+          stage="$(mktemp -d /tmp/nexus-collaboration.XXXXXX)"
+          trap 'rm -rf -- "$stage"' EXIT
+          chmod 755 "$stage"
+          cp server/services/agentCollaboration.js "$stage/agentCollaboration.js"
+          cp server/tests/agentCollaboration.test.js "$stage/agentCollaboration.test.js"
+          chmod 644 "$stage"/*.js
           sudo -n -- /usr/bin/bwrap --unshare-all --die-with-parent --new-session --cap-drop ALL --clearenv \
             --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind /lib64 /lib64 \
             --proc /proc --dev /dev --tmpfs /tmp --setenv HOME /nonexistent \
             --setenv PATH /usr/bin:/bin --ro-bind "$(command -v node)" /opt/node \
-            --ro-bind "$GITHUB_WORKSPACE/server/services/agentCollaboration.js" /work/server/services/agentCollaboration.js \
-            --ro-bind "$GITHUB_WORKSPACE/server/tests/agentCollaboration.test.js" /work/server/tests/agentCollaboration.test.js \
+            --ro-bind "$stage/agentCollaboration.js" /work/server/services/agentCollaboration.js \
+            --ro-bind "$stage/agentCollaboration.test.js" /work/server/tests/agentCollaboration.test.js \
             --chdir /work/server /opt/node --test tests/agentCollaboration.test.js
