@@ -2735,3 +2735,65 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_collaboration_active_share_descriptor.test.mjs`.
+
+
+<!-- community-core:validator-auth-presence-descriptor -->
+### Validator Auth Presence Descriptor for Config Review
+
+Provides a small deterministic helper to describe synthetic validator auth configuration from authConfigured and authFileExists flags, supporting consistent local review of module coordination and file dependency without reading credentials, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/validator_auth_presence_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Date is unavailable and must not be used. Input must be a plain object with boolean authConfigured and boolean authFileExists; extra properties are ignored and input is never mutated. Any malformed shape, missing field, null payload, array payload, non-plain-object, or any of the two fields that is not a boolean throws TypeError('INVALID_VALIDATOR_AUTH_PRESENCE_INPUT') without echoing input. On valid synthetic input return a fresh object with authConfigured, authFileExists echoing inputs, isReady true only when both are true, isMissing true only when both are false, isPartial true only when exactly one is true. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function/builtin identifiers, no property assignment/update/delete, no Object.assign/create, no aliased builtins or callbacks, no prototype/constructor access. Computation is literal and makes no inference about teams, tasks, agents, models, progress, priority, ordering or next steps and never contacts backends or agents. This module is independently tested; application/UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "authConfigured": true,
+    "authFileExists": true
+  },
+  "output": {
+    "authConfigured": true,
+    "authFileExists": true,
+    "isMissing": false,
+    "isPartial": false,
+    "isReady": true
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "authConfigured": false,
+    "authFileExists": false
+  },
+  "output": {
+    "authConfigured": false,
+    "authFileExists": false,
+    "isMissing": true,
+    "isPartial": false,
+    "isReady": false
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "authConfigured": true,
+    "authFileExists": false
+  },
+  "output": {
+    "authConfigured": true,
+    "authFileExists": false,
+    "isMissing": false,
+    "isPartial": true,
+    "isReady": false
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_validator_auth_presence_descriptor.test.mjs`.
