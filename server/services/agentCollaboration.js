@@ -44,7 +44,8 @@ function array(value, max, min = 0) {
   if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype || value.length < min || value.length > max) fail('INVALID_INPUT');
   // Sparse arrays, extra properties and accessors are not JSON data.
   const descriptors = Object.getOwnPropertyDescriptors(value);
-  if (Reflect.ownKeys(descriptors).some(key => typeof key !== 'string' || (key !== 'length' && !/^(0|[1-9][0-9]*)$/.test(key)))) fail('INVALID_INPUT');
+  if (Reflect.ownKeys(descriptors).some(key => typeof key !== 'string' || (key !== 'length'
+    && (!/^(0|[1-9][0-9]*)$/.test(key) || Number(key) >= value.length)))) fail('INVALID_INPUT');
   for (let i = 0; i < value.length; i += 1) {
     const item = descriptors[String(i)];
     if (!item || !Object.hasOwn(item, 'value') || !item.enumerable) fail('INVALID_INPUT');

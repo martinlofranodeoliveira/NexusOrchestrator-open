@@ -165,6 +165,11 @@ autoriza publicar, alterar permissões ou dispensar os testes existentes.
   histórico, `.git`, `.env`, pastas de autenticação ou conteúdo de arquivos.
   Campos extras, acessores e objetos não JSON são rejeitados; nomes de caminhos
   sensíveis comuns também são recusados. Isso não é um detector de segredos.
+  Arrays devem ser densos, com apenas índices próprios de `0` a `length - 1`.
+  Propriedades extras com nomes numéricos fora desse intervalo, como
+  `4294967295`, também são rejeitadas, inclusive acessores, sem ler seu valor.
+  Isso evita descartar metadados silenciosamente durante normalização ou replay;
+  arrays JSON válidos, inclusive congelados, mantêm o mesmo contrato.
 - Autenticar o ator e vincular `from`/`agentId` à identidade real. Não expor
   `apply` diretamente à UI, ao modelo ou a requisições sem autorização.
 - Serializar acesso entre processos com armazenamento transacional/lock e CAS
@@ -194,7 +199,7 @@ autoriza publicar, alterar permissões ou dispensar os testes existentes.
 
 ```sh
 cd server
-node --test tests/agentCollaboration.test.js
+node --test tests/agentCollaboration.test.js tests/agentCollaborationJsonArrays.test.js
 ```
 
 O caminho `tests/` é adicional: o script `npm test` atual executa `test/`
@@ -205,6 +210,10 @@ concorrência local agregada, modelos exatos, entrada malformada e referências
 públicas. Também verifica fencing da delegação após release/reclaim, token de
 pai omitido e autoridade de raiz separada de capacidades técnicas. Não usa rede,
 autenticação ou provedores reais.
+
+A suíte adicional de arrays verifica esse limite também em referências públicas,
+dependências, capacidades e importação do journal. Os 30 testes originais de
+colaboração continuam separados e inalterados.
 
 ## Referências e atribuição
 
