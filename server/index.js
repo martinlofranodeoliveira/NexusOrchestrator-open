@@ -10010,7 +10010,7 @@ async function startRalphForAgent(id, taskTitle, taskId = null, options = {}) {
       requestKind === 'collaboration' ||
       (requestKind === 'primary' && !isInternalTaskId(effectiveTaskId));
     const completionSuperseded =
-      completionDetected && tracksTaskOwnership && !canContinueCurrentTask;
+      !stoppedBySystem && completionDetected && tracksTaskOwnership && !canContinueCurrentTask;
     const closeoutCompletionDisposition = completionSuperseded
       ? 'superseded'
       : closeoutPreflight.completionDisposition;
@@ -10036,6 +10036,48 @@ async function startRalphForAgent(id, taskTitle, taskId = null, options = {}) {
       );
       emitHookDiagnostics(id, 'afterLaneClose', hookResult);
     };
+    if (stoppedBySystem) {
+      // Only the run still owning this agent may change its lane or queue.
+      // A replacement can already be active when the old process closes.
+      if (closeOwnsActiveRun) {
+        setAgentLaneState(
+          id,
+          { ...runRequest, taskId: effectiveTaskId, taskTitle: effectiveTaskTitle },
+          'cancelled',
+          'Loop pausado pelo orquestrador.',
+          {
+            taskStatus: currentPrimaryTask?.status || resolvedTaskStatus,
+            retryCount: runContext.retryCount,
+            commandRecoveryCount: runContext.commandRecoveryCount,
+          },
+        );
+      }
+      releaseClosedRun();
+      if (closeOwnsActiveRun) {
+        startNextQueuedRalphRun(id);
+        if (!isAgentOccupied(id)) {
+          // Syncing an assigned primary task here would replace cancellation
+          // with retry_scheduled even though no successor has started.
+          updateAgent(id, 'idle', 'Loop pausado pelo orquestrador.', {
+            currentModel: baseModel,
+            currentProvider: autonomousLlm.provider,
+            workspacePath: null,
+            workspaceMode: null,
+            activeTaskId: null,
+            activeTaskKind: null,
+            queueLength: getQueuedRuns(id).length,
+          });
+        }
+      }
+      try {
+        await cleanupTaskWorkspace(projectContext, workspaceInfo);
+      } catch (error) {
+        io.emit('agent_log', { id, log: `[WARNING] Falha ao limpar workspace: ${error.message}` });
+      }
+      await finalizeLaneHooks('cancelled', 'cancelled');
+      return;
+    }
+
     if (!adminPendingDetected && closeoutDisposition === 'retry_transient') {
       shouldCleanupWorkspace = !closeoutPreflight.preserveWorkspace;
       markRuntimeCandidateFailure(runContext.runtimeCandidate, {

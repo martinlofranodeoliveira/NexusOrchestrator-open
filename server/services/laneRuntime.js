@@ -429,6 +429,29 @@ function evaluateRecoveryPlan({
 }
 
 function evaluateLaneCloseOutcome(input = {}) {
+  // A marker buffered before termination cannot authorize closeout after stop.
+  if (input.stoppedBySystem) {
+    return {
+      disposition: 'cancelled',
+      completionDisposition: 'cancelled',
+      commandFailureUnrecovered: false,
+      hasBlockingCommandFailure: false,
+      shouldRetryTransientFailure: false,
+      shouldRetryCommandRecovery: false,
+      shouldRejectCompletionForCommandFailure: false,
+      shouldContinueIncompleteRun: false,
+      iterationLimitExceeded: false,
+      shouldRejectReview: false,
+      shouldRejectReviewForMissingEvidence: false,
+      completionRequiresIntegratedChanges: false,
+      completionHadNoIntegratedChanges: false,
+      completionHadBlockingIntegrationFailure: false,
+      preserveWorkspace: false,
+      transientRecovery: null,
+      commandRecovery: null,
+    };
+  }
+
   const completionDetected = Boolean(input.completionDetected);
   const reviewRejected = Boolean(input.reviewRejected);
   const stoppedBySystem = Boolean(input.stoppedBySystem);
