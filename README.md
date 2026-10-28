@@ -2797,3 +2797,75 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_validator_auth_presence_descriptor.test.mjs`.
+
+
+<!-- community-core:room-floor-spread-descriptor -->
+### Room Floor Spread Descriptor for Pixel Office Coordination
+
+Provides a small deterministic helper to describe synthetic pixel-office floor spread from floor numbers only, supporting consistent local coordination planning across rooms without reading titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/room_floor_spread_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Date is unavailable and must not be used. Input must be a plain object with floors array length 0..500 of integers 0..1000; extra properties are ignored and input is never mutated. Any malformed shape, missing field, null payload, array payload, non-plain-object, non-array floors, length above 500, non-integer, non-finite or out-of-range element throws TypeError('INVALID_ROOM_FLOOR_SPREAD_INPUT') without echoing input. On valid synthetic input return a fresh object with count, minFloor, maxFloor, span, isEmpty, isSingleFloor, hasSpread where count echoes floors length, minFloor is null when empty else minimum, maxFloor is null when empty else maximum, span is 0 when empty else max minus min, isEmpty is true only when count equals 0, isSingleFloor is true only when count above 0 and span equals 0, and hasSpread is true only when span above 0. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function or builtin identifiers, no property assignment or update or delete, no Object.assign or create, no aliased builtins or callbacks, no prototype or constructor access. Computation is literal min/max/span aggregation only and makes no inference about teams, roles, progress, priority, ordering, duration, health, causes or next steps and never contacts backends or agents. This module is independently tested; application and UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "floors": []
+  },
+  "output": {
+    "count": 0,
+    "hasSpread": false,
+    "isEmpty": true,
+    "isSingleFloor": false,
+    "maxFloor": null,
+    "minFloor": null,
+    "span": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "floors": [
+      3,
+      3
+    ]
+  },
+  "output": {
+    "count": 2,
+    "hasSpread": false,
+    "isEmpty": false,
+    "isSingleFloor": true,
+    "maxFloor": 3,
+    "minFloor": 3,
+    "span": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "floors": [
+      0,
+      2,
+      5
+    ]
+  },
+  "output": {
+    "count": 3,
+    "hasSpread": true,
+    "isEmpty": false,
+    "isSingleFloor": false,
+    "maxFloor": 5,
+    "minFloor": 0,
+    "span": 5
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_room_floor_spread_descriptor.test.mjs`.
