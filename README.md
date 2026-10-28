@@ -3109,3 +3109,92 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_task_status_plurality_descriptor.test.mjs`.
+
+
+<!-- community-core:room-team-diversity-descriptor -->
+### Room Team Diversity Descriptor for Coordination Planning
+
+Provides a small deterministic helper to describe synthetic pixel-office room team diversity from items team flags only, supporting consistent local coordination planning across rooms without reading names, descriptions, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/room_team_diversity_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Date is unavailable and must not be used. Input must be a plain object with items array length 0..200 where each element is a plain object with string team length 1..64; extra properties on payload and elements are ignored and input is never mutated. Any malformed shape, missing field, null payload, array payload, non-plain-object, non-array items, length above 200, non-plain-object element, or missing, non-string, empty or overlong team throws TypeError('INVALID_ROOM_TEAM_DIVERSITY_INPUT') without echoing input. On valid synthetic input return a fresh object with totalRooms, distinctTeamCount, teams, teamCounts, isEmpty, isSingleTeam, isMultiTeam where totalRooms equals items length, teams is a new array of distinct team strings in first-seen order, teamCounts is a fresh object mapping each distinct team to its room count, distinctTeamCount equals teams length, isEmpty is true only when totalRooms equals 0, isSingleTeam is true only when distinctTeamCount equals 1, isMultiTeam is true only when distinctTeamCount is above 1. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function or builtin identifiers, no property assignment or update or delete, no Object.assign or create, no aliased builtins or callbacks, no prototype or constructor access. Computation is literal distinct grouping and counting only and makes no inference about teams, roles, progress, priority, ordering, duration, health, causes or next steps and never contacts backends or agents. This module is independently tested; application and UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "items": []
+  },
+  "output": {
+    "distinctTeamCount": 0,
+    "isEmpty": true,
+    "isMultiTeam": false,
+    "isSingleTeam": false,
+    "teamCounts": {},
+    "teams": [],
+    "totalRooms": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "items": [
+      {
+        "team": "solo"
+      }
+    ]
+  },
+  "output": {
+    "distinctTeamCount": 1,
+    "isEmpty": false,
+    "isMultiTeam": false,
+    "isSingleTeam": true,
+    "teamCounts": {
+      "solo": 1
+    },
+    "teams": [
+      "solo"
+    ],
+    "totalRooms": 1
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "items": [
+      {
+        "team": "atlas"
+      },
+      {
+        "team": "atlas"
+      },
+      {
+        "team": "pixel"
+      }
+    ]
+  },
+  "output": {
+    "distinctTeamCount": 2,
+    "isEmpty": false,
+    "isMultiTeam": true,
+    "isSingleTeam": false,
+    "teamCounts": {
+      "atlas": 2,
+      "pixel": 1
+    },
+    "teams": [
+      "atlas",
+      "pixel"
+    ],
+    "totalRooms": 3
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_room_team_diversity_descriptor.test.mjs`.
