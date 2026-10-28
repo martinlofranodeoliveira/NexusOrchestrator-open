@@ -3023,3 +3023,89 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_lane_recovery_progress_descriptor.test.mjs`.
+
+
+<!-- community-core:task-status-plurality-descriptor -->
+### Task Status Plurality Descriptor for Coordination Planning
+
+Provides a small deterministic helper to describe synthetic task-status plurality from todo/doing/done/blocked/other counts only, supporting consistent local coordination planning across task boards without reading titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/task_status_plurality_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Date is unavailable and must not be used. Input must be a plain object with integer todo, doing, done, blocked, other each 0..10000; extra properties are ignored and input is never mutated. Any malformed shape, missing field, null payload, array payload, non-plain-object, non-integer, non-finite or out-of-range count throws TypeError('INVALID_TASK_STATUS_PLURALITY_INPUT') without echoing input. On valid synthetic input return a fresh object with todo, doing, done, blocked, other, total, topCount, dominant, isEmpty, isTie where todo/doing/done/blocked/other echo inputs, total is sum of five counts, topCount is maximum of five counts, dominant is null when total equals 0 else first in fixed order todo, doing, done, blocked, other among those equal to topCount, isEmpty is true only when total equals 0, isTie is true only when total is above 0 and more than one bucket equals topCount. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function or builtin identifiers, no property assignment or update or delete, no Object.assign or create, no aliased builtins or callbacks, no prototype or constructor access. Computation is literal sum/maximum/fixed-order tie-break only and makes no inference about teams, roles, progress, priority, ordering, duration, health, causes or next steps and never contacts backends or agents. This module is independently tested; application and UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "blocked": 0,
+    "doing": 1,
+    "done": 0,
+    "other": 0,
+    "todo": 2
+  },
+  "output": {
+    "blocked": 0,
+    "doing": 1,
+    "dominant": "todo",
+    "done": 0,
+    "isEmpty": false,
+    "isTie": false,
+    "other": 0,
+    "todo": 2,
+    "topCount": 2,
+    "total": 3
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "blocked": 2,
+    "doing": 1,
+    "done": 2,
+    "other": 0,
+    "todo": 1
+  },
+  "output": {
+    "blocked": 2,
+    "doing": 1,
+    "dominant": "done",
+    "done": 2,
+    "isEmpty": false,
+    "isTie": true,
+    "other": 0,
+    "todo": 1,
+    "topCount": 2,
+    "total": 6
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "blocked": 0,
+    "doing": 0,
+    "done": 0,
+    "other": 0,
+    "todo": 0
+  },
+  "output": {
+    "blocked": 0,
+    "doing": 0,
+    "dominant": null,
+    "done": 0,
+    "isEmpty": true,
+    "isTie": false,
+    "other": 0,
+    "todo": 0,
+    "topCount": 0,
+    "total": 0
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_task_status_plurality_descriptor.test.mjs`.
