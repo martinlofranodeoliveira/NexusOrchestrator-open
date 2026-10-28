@@ -2869,3 +2869,71 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_room_floor_spread_descriptor.test.mjs`.
+
+
+<!-- community-core:room-topology-mode-descriptor -->
+### Room Topology Mode Descriptor for Pixel Office Coordination
+
+Provides a small deterministic helper to describe synthetic pixel-office topology mode from byTopology counts only, supporting consistent local coordination planning across rooms without reading titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/room_topology_mode_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Date is unavailable and must not be used. Input must be a plain object with byTopology plain object with 0..50 entries where each key is string length 1..64 and each value is integer 0..10000 finite safe; extra properties are ignored and input is never mutated. Any malformed shape, missing field, null payload, array payload, non-plain-object, non-plain-object byTopology, too many entries, bad key length, non-integer, non-finite or out-of-range value throws TypeError('INVALID_ROOM_TOPOLOGY_MODE_INPUT') without echoing input. On valid synthetic input return a fresh object with distinctTopologies, totalRooms, topTopology, topCount, isEmpty, isSingleTopology where distinctTopologies counts own enumerable keys of byTopology, totalRooms sums values, topTopology is null when totalRooms equals 0 else the key with maximum count with lexicographically smallest key winning ties, topCount is 0 when topTopology is null else the maximum count, isEmpty is true only when totalRooms equals 0, and isSingleTopology is true only when distinctTopologies equals 1 and totalRooms is above 0. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function or builtin identifiers, no property assignment or update or delete, no Object.assign or create, no aliased builtins or callbacks, no prototype or constructor access. Computation is literal count/sum/mode aggregation only and makes no inference about teams, roles, progress, priority, ordering, duration, health, causes or next steps and never contacts backends or agents. This module is independently tested; application and UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "byTopology": {}
+  },
+  "output": {
+    "distinctTopologies": 0,
+    "isEmpty": true,
+    "isSingleTopology": false,
+    "topCount": 0,
+    "topTopology": null,
+    "totalRooms": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "byTopology": {
+      "grid": 3,
+      "hub": 5
+    }
+  },
+  "output": {
+    "distinctTopologies": 2,
+    "isEmpty": false,
+    "isSingleTopology": false,
+    "topCount": 5,
+    "topTopology": "hub",
+    "totalRooms": 8
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "byTopology": {
+      "grid": 4,
+      "hub": 4
+    }
+  },
+  "output": {
+    "distinctTopologies": 2,
+    "isEmpty": false,
+    "isSingleTopology": false,
+    "topCount": 4,
+    "topTopology": "grid",
+    "totalRooms": 8
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_room_topology_mode_descriptor.test.mjs`.
