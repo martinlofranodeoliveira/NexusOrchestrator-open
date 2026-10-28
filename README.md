@@ -3288,3 +3288,76 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_room_interlink_symmetry_descriptor.test.mjs`.
+
+
+<!-- community-core:task-status-consistency-descriptor -->
+### Task Status Consistency Descriptor for Coordination Planning
+
+Provides a small deterministic helper to describe synthetic tasks total versus byStatus sum consistency only, supporting consistent local coordination planning across task boards without reading titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/task_status_consistency_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Date is unavailable and must not be used. Input must be a plain object with integer total 0..10000 and plain-object byStatus with 0..50 entries where each key is string length 1..64 and each value is integer 0..10000; extra properties on payload are ignored and input is never mutated. Any malformed shape, missing field, null payload, array payload, non-plain-object, non-integer, non-finite, out-of-range total, non-object byStatus, overlong entry count, empty or overlong key, or missing, non-integer, non-finite or out-of-range value throws TypeError('INVALID_TASK_STATUS_CONSISTENCY_INPUT') without echoing input. On valid synthetic input return a fresh object with total, summed, distinctStatusCount, matches, surplus, deficit where total echoes input total, summed is literal sum of byStatus values, distinctStatusCount equals number of byStatus keys, matches is true only when summed equals total, surplus equals summed minus total when summed is above total else 0, deficit equals total minus summed when total is above summed else 0. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function or builtin identifiers, no property assignment or update or delete, no Object.assign or create, no aliased builtins or callbacks, no prototype or constructor access. Computation is literal sum and equality comparison only and makes no inference about teams, roles, progress, priority, ordering, duration, health, causes or next steps and never contacts backends or agents. This module is independently tested; application and UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "byStatus": {
+      "done": 2,
+      "todo": 1
+    },
+    "total": 3
+  },
+  "output": {
+    "deficit": 0,
+    "distinctStatusCount": 2,
+    "matches": true,
+    "summed": 3,
+    "surplus": 0,
+    "total": 3
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "byStatus": {
+      "done": 1,
+      "todo": 2
+    },
+    "total": 2
+  },
+  "output": {
+    "deficit": 0,
+    "distinctStatusCount": 2,
+    "matches": false,
+    "summed": 3,
+    "surplus": 1,
+    "total": 2
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "byStatus": {
+      "todo": 2
+    },
+    "total": 5
+  },
+  "output": {
+    "deficit": 3,
+    "distinctStatusCount": 1,
+    "matches": false,
+    "summed": 2,
+    "surplus": 0,
+    "total": 5
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_task_status_consistency_descriptor.test.mjs`.
