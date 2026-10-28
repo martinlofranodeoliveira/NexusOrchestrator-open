@@ -3198,3 +3198,93 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_room_team_diversity_descriptor.test.mjs`.
+
+
+<!-- community-core:room-interlink-symmetry-descriptor -->
+### Room Interlink Symmetry Descriptor for Pixel Office Coordination
+
+Provides a small deterministic helper to describe synthetic pixel-office room interlink symmetry from ids and interlinkedRoomIds only, supporting consistent local coordination planning across rooms without reading names, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/room_interlink_symmetry_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Date is unavailable and must not be used. Input must be a plain object with items array length 0..50 where each element is a plain object with string id length 1..64 and interlinkedRoomIds array length 0..10 where each element is string length 1..64; extra properties on payload and elements are ignored and input is never mutated. Any malformed shape, missing field, null payload, array payload, non-plain-object, non-array items, length above 50, non-plain-object element, missing, non-string, empty or overlong id, duplicate id, non-array links, length above 10, or missing, non-string, empty or overlong link throws TypeError('INVALID_ROOM_INTERLINK_SYMMETRY_INPUT') without echoing input. On valid synthetic input return a fresh object with totalRooms, totalLinks, reciprocalLinks, missingLinks, danglingLinks, isEmpty, isSymmetric where totalRooms equals items length, totalLinks equals sum of interlinkedRoomIds lengths as listed, reciprocalLinks equals number of link entries whose target id exists in items and whose target room lists source id with self-link counting when listed, missingLinks equals totalLinks minus reciprocalLinks, danglingLinks equals number of link entries whose target id is absent from items, isEmpty is true only when totalRooms equals 0, isSymmetric is true only when totalRooms is above 0 and missingLinks equals 0. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries or Object.values with Map get and set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function or builtin identifiers, no property assignment or update or delete, no Object.assign or create, no aliased builtins or callbacks, no prototype or constructor access. Computation is literal set membership and counting only and makes no inference about teams, roles, progress, priority, ordering, duration, health, causes or next steps and never contacts backends or agents. This module is independently tested; application and UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "items": []
+  },
+  "output": {
+    "danglingLinks": 0,
+    "isEmpty": true,
+    "isSymmetric": false,
+    "missingLinks": 0,
+    "reciprocalLinks": 0,
+    "totalLinks": 0,
+    "totalRooms": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "items": [
+      {
+        "id": "room-a",
+        "interlinkedRoomIds": [
+          "room-b"
+        ]
+      },
+      {
+        "id": "room-b",
+        "interlinkedRoomIds": [
+          "room-a"
+        ]
+      }
+    ]
+  },
+  "output": {
+    "danglingLinks": 0,
+    "isEmpty": false,
+    "isSymmetric": true,
+    "missingLinks": 0,
+    "reciprocalLinks": 2,
+    "totalLinks": 2,
+    "totalRooms": 2
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "items": [
+      {
+        "id": "room-a",
+        "interlinkedRoomIds": [
+          "room-b",
+          "room-x"
+        ]
+      },
+      {
+        "id": "room-b",
+        "interlinkedRoomIds": []
+      }
+    ]
+  },
+  "output": {
+    "danglingLinks": 1,
+    "isEmpty": false,
+    "isSymmetric": false,
+    "missingLinks": 2,
+    "reciprocalLinks": 0,
+    "totalLinks": 2,
+    "totalRooms": 2
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_room_interlink_symmetry_descriptor.test.mjs`.
