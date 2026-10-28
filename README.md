@@ -2937,3 +2937,89 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_room_topology_mode_descriptor.test.mjs`.
+
+
+<!-- community-core:lane-recovery-progress-descriptor -->
+### Lane Recovery Progress Descriptor for Coordination Review
+
+Provides a small deterministic helper to describe synthetic lane recovery plan progress from attempt, maxAttempts and steps counts only, supporting consistent local coordination review without reading step text, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/lane_recovery_progress_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Date is unavailable and must not be used. Input must be a plain object with attempt integer 0..10000 or null, maxAttempts integer 0..10000, and steps array length 0..50 where each element is a string length 0..512; extra properties are ignored and input is never mutated. Any malformed shape, missing field, null payload, array payload, non-plain-object, non-integer or out-of-range attempt/maxAttempts, non-array steps, length above 50, or non-string or overlong step throws TypeError('INVALID_LANE_RECOVERY_PROGRESS_INPUT') without echoing input. On valid synthetic input return a fresh object with totalSteps, attempt, maxAttempts, remainingAttempts, remainingSteps, isStarted, isExhausted, isStepsExhausted, hasSteps where totalSteps equals steps length, remainingAttempts equals maxAttempts when attempt is null else maxAttempts minus attempt clamped to 0, remainingSteps equals totalSteps when attempt is null else totalSteps minus attempt clamped to 0, isStarted is true only when attempt is not null, isExhausted is true only when attempt is not null and attempt is at or above maxAttempts, isStepsExhausted is true only when attempt is not null and attempt is at or above totalSteps, hasSteps is true only when totalSteps is above 0. Step text is never read beyond type check. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function or builtin identifiers, no property assignment or update or delete, no Object.assign or create, no aliased builtins or callbacks, no prototype or constructor access. Computation is literal count/subtract/clamp/comparison only and makes no inference about teams, roles, progress, priority, ordering, duration, health, causes or next steps and never contacts backends or agents. This module is independently tested; application and UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "attempt": null,
+    "maxAttempts": 3,
+    "steps": [
+      "check",
+      "retry"
+    ]
+  },
+  "output": {
+    "attempt": null,
+    "hasSteps": true,
+    "isExhausted": false,
+    "isStarted": false,
+    "isStepsExhausted": false,
+    "maxAttempts": 3,
+    "remainingAttempts": 3,
+    "remainingSteps": 2,
+    "totalSteps": 2
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "attempt": 1,
+    "maxAttempts": 3,
+    "steps": [
+      "check",
+      "retry",
+      "verify"
+    ]
+  },
+  "output": {
+    "attempt": 1,
+    "hasSteps": true,
+    "isExhausted": false,
+    "isStarted": true,
+    "isStepsExhausted": false,
+    "maxAttempts": 3,
+    "remainingAttempts": 2,
+    "remainingSteps": 2,
+    "totalSteps": 3
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "attempt": 3,
+    "maxAttempts": 2,
+    "steps": [
+      "check"
+    ]
+  },
+  "output": {
+    "attempt": 3,
+    "hasSteps": true,
+    "isExhausted": true,
+    "isStarted": true,
+    "isStepsExhausted": true,
+    "maxAttempts": 2,
+    "remainingAttempts": 0,
+    "remainingSteps": 0,
+    "totalSteps": 1
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_lane_recovery_progress_descriptor.test.mjs`.
