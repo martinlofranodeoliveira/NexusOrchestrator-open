@@ -3447,3 +3447,87 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_room_capacity_load_descriptor.test.mjs`.
+
+
+<!-- community-core:attention-list-match-descriptor -->
+### Attention List Match Descriptor for Operations Review
+
+Provides a small deterministic helper to compare synthetic attention flaggedCount/criticalCount totals against tasks/criticalTasks list lengths only, supporting consistent local operations review without reading titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/attention_list_match_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Date is unavailable and must not be used. Input must be a plain object with flaggedCount integer 0..10000, criticalCount integer 0..10000, tasks array length 0..10000 where each element is a plain object, and criticalTasks array length 0..10000 where each element is a plain object; extra properties on payload and elements are ignored and input is never mutated. Any malformed shape, missing field, null payload, array payload, non-plain-object, non-integer or non-finite or out-of-range count, non-array list, length above 10000, or array or non-plain-object list element throws TypeError('INVALID_ATTENTION_LIST_MATCH_INPUT') without echoing input. On valid synthetic input return a fresh object with flaggedCount, criticalCount, taskCount, criticalTaskCount, flaggedMatches, criticalMatches, isConsistent where taskCount equals tasks length, criticalTaskCount equals criticalTasks length, flaggedMatches is true only when flaggedCount equals taskCount, criticalMatches is true only when criticalCount equals criticalTaskCount, and isConsistent is true only when both matches are true. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function or builtin identifiers, no property assignment or update or delete, no Object.assign or create, no aliased builtins or callbacks, no prototype or constructor access. Computation is literal length and equality only and makes no inference about teams, roles, progress, priority, ordering, duration, health, causes, titles or next steps and never contacts backends or agents. This module is independently tested; application and UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "criticalCount": 1,
+    "criticalTasks": [
+      {}
+    ],
+    "flaggedCount": 2,
+    "tasks": [
+      {},
+      {}
+    ]
+  },
+  "output": {
+    "criticalCount": 1,
+    "criticalMatches": true,
+    "criticalTaskCount": 1,
+    "flaggedCount": 2,
+    "flaggedMatches": true,
+    "isConsistent": true,
+    "taskCount": 2
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "criticalCount": 1,
+    "criticalTasks": [
+      {},
+      {}
+    ],
+    "flaggedCount": 2,
+    "tasks": [
+      {}
+    ]
+  },
+  "output": {
+    "criticalCount": 1,
+    "criticalMatches": false,
+    "criticalTaskCount": 2,
+    "flaggedCount": 2,
+    "flaggedMatches": false,
+    "isConsistent": false,
+    "taskCount": 1
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "criticalCount": 0,
+    "criticalTasks": [],
+    "flaggedCount": 0,
+    "tasks": []
+  },
+  "output": {
+    "criticalCount": 0,
+    "criticalMatches": true,
+    "criticalTaskCount": 0,
+    "flaggedCount": 0,
+    "flaggedMatches": true,
+    "isConsistent": true,
+    "taskCount": 0
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_attention_list_match_descriptor.test.mjs`.
