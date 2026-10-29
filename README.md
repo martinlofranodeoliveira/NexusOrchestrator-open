@@ -3361,3 +3361,89 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_task_status_consistency_descriptor.test.mjs`.
+
+
+<!-- community-core:room-capacity-load-descriptor -->
+### Room Capacity Load Descriptor for Coordination Planning
+
+Provides a small deterministic helper to describe synthetic pixel-office room capacity load from items configuredSlots and occupants counts only, supporting consistent local coordination planning across rooms without reading names, descriptions, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/room_capacity_load_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Date is unavailable and must not be used. Input must be a plain object with items array length 0..200 where each element is a plain object with integer configuredSlots 0..10000 and integer occupants 0..10000; extra properties on payload and elements are ignored and input is never mutated. Any malformed shape, missing field, null payload, array payload, non-plain-object, non-array items, length above 200, non-plain-object element, or missing, non-integer, non-finite, out-of-range configuredSlots or occupants throws TypeError('INVALID_ROOM_CAPACITY_LOAD_INPUT') without echoing input. On valid synthetic input return a fresh object with totalRooms, totalConfiguredSlots, totalOccupants, totalFreeSlots, fullRooms, overfilledRooms, isEmpty, isOverloaded where totalRooms equals items length, totalConfiguredSlots equals literal sum of configuredSlots, totalOccupants equals literal sum of occupants, totalFreeSlots equals literal sum over rooms of configuredSlots minus occupants clamped to 0 per room, fullRooms equals count of rooms where configuredSlots is above 0 and occupants is at or above configuredSlots, overfilledRooms equals count of rooms where occupants is above configuredSlots, isEmpty is true only when totalRooms equals 0, isOverloaded is true only when overfilledRooms is above 0. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function or builtin identifiers, no property assignment or update or delete, no Object.assign or create, no aliased builtins or callbacks, no prototype or constructor access. Computation is literal summation and counting only and makes no inference about teams, roles, progress, priority, ordering, duration, health, causes or next steps and never contacts backends or agents. This module is independently tested; application and UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "items": []
+  },
+  "output": {
+    "fullRooms": 0,
+    "isEmpty": true,
+    "isOverloaded": false,
+    "overfilledRooms": 0,
+    "totalConfiguredSlots": 0,
+    "totalFreeSlots": 0,
+    "totalOccupants": 0,
+    "totalRooms": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "items": [
+      {
+        "configuredSlots": 4,
+        "occupants": 0
+      },
+      {
+        "configuredSlots": 4,
+        "occupants": 4
+      }
+    ]
+  },
+  "output": {
+    "fullRooms": 1,
+    "isEmpty": false,
+    "isOverloaded": false,
+    "overfilledRooms": 0,
+    "totalConfiguredSlots": 8,
+    "totalFreeSlots": 4,
+    "totalOccupants": 4,
+    "totalRooms": 2
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "items": [
+      {
+        "configuredSlots": 2,
+        "occupants": 5
+      },
+      {
+        "configuredSlots": 3,
+        "occupants": 1
+      }
+    ]
+  },
+  "output": {
+    "fullRooms": 1,
+    "isEmpty": false,
+    "isOverloaded": true,
+    "overfilledRooms": 1,
+    "totalConfiguredSlots": 5,
+    "totalFreeSlots": 2,
+    "totalOccupants": 6,
+    "totalRooms": 2
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_room_capacity_load_descriptor.test.mjs`.
