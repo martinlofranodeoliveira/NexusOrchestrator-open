@@ -3744,3 +3744,77 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_task_board_page_count_descriptor.test.mjs`.
+
+
+<!-- community-core:external-fleet-effective-descriptor -->
+### External Fleet Effective Descriptor for Observer Review
+
+Provides a small deterministic helper to describe synthetic external-fleet effective availability from enabled, state and timestamp presence, letting the open pixel-office orchestration edition render observer disabled, live or degraded badges consistently without reading titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/external_fleet_effective_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Date is unavailable and must not be used. Input must be a plain object with enabled boolean, state string equal to one of 'live', 'stale', 'unavailable', and updatedAtMs integer 0 to 9007199254740991 or null; extra properties on payload are ignored and input is never mutated. Any malformed shape, missing field, null payload, array payload, non-plain-object, non-boolean enabled, non-literal state, or non-integer or non-finite or out-of-range or non-null updatedAtMs throws TypeError('INVALID_EXTERNAL_FLEET_EFFECTIVE_INPUT') without echoing input. On valid synthetic input return a fresh object with enabled, state, updatedAtMs, effective, hasTimestamp, isDisabled, isLive, isDegraded where hasTimestamp is true only when updatedAtMs is an integer, effective is 'disabled' when enabled is false else state value, isDisabled is true only when effective equals 'disabled', isLive is true only when effective equals 'live', and isDegraded is true only when effective equals 'stale' or effective equals 'unavailable'. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries or Object.values with Map get or set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function or builtin identifiers, no property assignment or update or delete, no Object.assign or create, no aliased builtins or callbacks, no prototype or constructor access. Computation is literal boolean gating and equality only and makes no inference about teams, roles, tasks, agents, states, progress, priority, health, causes, titles, commands, models or next steps and never contacts backends or agents. This module is independently tested; application and UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "enabled": true,
+    "state": "live",
+    "updatedAtMs": 123
+  },
+  "output": {
+    "effective": "live",
+    "enabled": true,
+    "hasTimestamp": true,
+    "isDegraded": false,
+    "isDisabled": false,
+    "isLive": true,
+    "state": "live",
+    "updatedAtMs": 123
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "enabled": false,
+    "state": "live",
+    "updatedAtMs": null
+  },
+  "output": {
+    "effective": "disabled",
+    "enabled": false,
+    "hasTimestamp": false,
+    "isDegraded": false,
+    "isDisabled": true,
+    "isLive": false,
+    "state": "live",
+    "updatedAtMs": null
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "enabled": true,
+    "state": "stale",
+    "updatedAtMs": null
+  },
+  "output": {
+    "effective": "stale",
+    "enabled": true,
+    "hasTimestamp": false,
+    "isDegraded": true,
+    "isDisabled": false,
+    "isLive": false,
+    "state": "stale",
+    "updatedAtMs": null
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_external_fleet_effective_descriptor.test.mjs`.
