@@ -3531,3 +3531,83 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_attention_list_match_descriptor.test.mjs`.
+
+
+<!-- community-core:task-board-page-window-descriptor -->
+### Task Board Page Window Descriptor for Task Lists
+
+Provides a small deterministic helper to describe a synthetic task board page window from total, pageSize and pageIndex only, letting the open agent-orchestration edition render paged task lists consistently without reading titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/task_board_page_window_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Date is unavailable and must not be used. Input must be a plain object with total integer 0..10000, pageSize integer 1..1000 and pageIndex integer 0..10000; extra properties on payload are ignored and input is never mutated. Any malformed shape, missing field, null payload, array payload, non-plain-object, non-integer, non-finite or out-of-range total, pageSize or pageIndex throws TypeError('INVALID_TASK_BOARD_PAGE_WINDOW_INPUT') without echoing input. On valid synthetic input return a fresh object with total, pageSize, pageIndex, pageCount, start, end, count, hasPrev, hasNext, isEmpty where pageCount is 0 when total is 0 else ceiling of total divided by pageSize, start is pageIndex times pageSize clamped to total, end is start plus pageSize clamped to total, count is end minus start, hasPrev is true only when pageCount is above 0 and pageIndex is above 0, hasNext is true only when pageIndex plus 1 is below pageCount, and isEmpty is true only when count equals 0. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function or builtin identifiers, no property assignment or update or delete, no Object.assign or create, no aliased builtins or callbacks, no prototype or constructor access. Computation is literal windowing only and makes no inference about teams, roles, tasks, agents, states, progress, priority, health, causes, titles, commands, models or next steps and never contacts backends or agents. This module is independently tested; application and UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "pageIndex": 0,
+    "pageSize": 10,
+    "total": 0
+  },
+  "output": {
+    "count": 0,
+    "end": 0,
+    "hasNext": false,
+    "hasPrev": false,
+    "isEmpty": true,
+    "pageCount": 0,
+    "pageIndex": 0,
+    "pageSize": 10,
+    "start": 0,
+    "total": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "pageIndex": 0,
+    "pageSize": 10,
+    "total": 25
+  },
+  "output": {
+    "count": 10,
+    "end": 10,
+    "hasNext": true,
+    "hasPrev": false,
+    "isEmpty": false,
+    "pageCount": 3,
+    "pageIndex": 0,
+    "pageSize": 10,
+    "start": 0,
+    "total": 25
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "pageIndex": 2,
+    "pageSize": 10,
+    "total": 25
+  },
+  "output": {
+    "count": 5,
+    "end": 25,
+    "hasNext": false,
+    "hasPrev": true,
+    "isEmpty": false,
+    "pageCount": 3,
+    "pageIndex": 2,
+    "pageSize": 10,
+    "start": 20,
+    "total": 25
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_task_board_page_window_descriptor.test.mjs`.
