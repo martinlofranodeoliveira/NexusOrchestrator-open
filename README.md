@@ -3676,3 +3676,71 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_fleet_service_activity_descriptor.test.mjs`.
+
+
+<!-- community-core:task-board-page-count-descriptor -->
+### Task Board Page Count Descriptor for Pagination Review
+
+Provides a small deterministic helper to compute synthetic task-board pagination totals with ceiling division, letting the open pixel-office orchestration edition describe page counts consistently without reading titles, contacting backends, or dispatching agents. It supports local technical walkthroughs that organize synthetic taskCount and pageSize pairs with literal integer arithmetic and makes no inference about teams, roles, progress, or next steps.
+
+Reusable deterministic JSON core: `web-v2/src/community/task_board_page_count_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Date is unavailable and must not be used. Input must be a plain object with totalCount integer 0..10000 and pageSize integer 1..1000; extra properties on payload are ignored and input is never mutated. Any malformed shape, missing field, null payload, array payload, non-plain-object, non-integer or non-finite or out-of-range totalCount or pageSize throws TypeError('INVALID_TASK_BOARD_PAGE_COUNT_INPUT') without echoing input. On valid synthetic input return a fresh object with totalCount, pageSize, totalPages, remainder, isEmpty, isSinglePage, hasMultiplePages where totalPages is 0 when totalCount is 0 else ceiling of totalCount divided by pageSize computed with integer arithmetic, remainder is totalCount modulo pageSize, isEmpty is true only when totalCount equals 0, isSinglePage is true only when totalPages equals 1, and hasMultiplePages is true only when totalPages is above 1. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function or builtin identifiers, no property assignment or update or delete, no Object.assign or create, no aliased builtins or callbacks, no prototype or constructor access. Computation is literal ceiling division and boolean equality only and makes no inference about teams, roles, floors, topology, tasks, agents, states, progress, priority, health, causes, titles, commands, models or next steps and never contacts backends or agents. This module is independently tested; application and UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "pageSize": 10,
+    "totalCount": 0
+  },
+  "output": {
+    "hasMultiplePages": false,
+    "isEmpty": true,
+    "isSinglePage": false,
+    "pageSize": 10,
+    "remainder": 0,
+    "totalCount": 0,
+    "totalPages": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "pageSize": 10,
+    "totalCount": 10
+  },
+  "output": {
+    "hasMultiplePages": false,
+    "isEmpty": false,
+    "isSinglePage": true,
+    "pageSize": 10,
+    "remainder": 0,
+    "totalCount": 10,
+    "totalPages": 1
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "pageSize": 10,
+    "totalCount": 11
+  },
+  "output": {
+    "hasMultiplePages": true,
+    "isEmpty": false,
+    "isSinglePage": false,
+    "pageSize": 10,
+    "remainder": 1,
+    "totalCount": 11,
+    "totalPages": 2
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_task_board_page_count_descriptor.test.mjs`.
