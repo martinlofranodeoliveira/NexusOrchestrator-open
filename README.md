@@ -3611,3 +3611,68 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_task_board_page_window_descriptor.test.mjs`.
+
+
+<!-- community-core:fleet-service-activity-descriptor -->
+### Fleet Service Activity Descriptor for Observer Mode
+
+Provides a small deterministic helper to distinguish synthetic fleet service connectivity from real agent work in observer mode, letting the open agent-orchestration edition render connected-versus-working badges consistently without reading titles, contacting backends, or dispatching agents.
+
+Reusable deterministic JSON core: `web-v2/src/community/fleet_service_activity_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Date is unavailable and must not be used. Input must be a plain object with serviceConnected boolean and agentWorking boolean; extra properties on payload are ignored and input is never mutated. Any malformed shape, missing field, null payload, array payload, non-plain-object, or non-boolean serviceConnected or agentWorking throws TypeError('INVALID_FLEET_SERVICE_ACTIVITY_INPUT') without echoing input. On valid synthetic input return a fresh object with serviceConnected, agentWorking, status, isDisconnected, isIdleConnected, isWorking where status is 'disconnected' when serviceConnected is false, 'working' when serviceConnected is true and agentWorking is true, else 'idle', isDisconnected is true only when status equals 'disconnected', isIdleConnected is true only when serviceConnected is true and agentWorking is false, and isWorking is true only when status equals 'working'. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries/Object.values with Map get/set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function or builtin identifiers, no property assignment or update or delete, no Object.assign or create, no aliased builtins or callbacks, no prototype or constructor access. Computation is literal boolean truth-table only and makes no inference about teams, roles, tasks, agents, states, progress, priority, health, causes, titles, commands, models or next steps and never contacts backends or agents. This module is independently tested; application and UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "agentWorking": false,
+    "serviceConnected": false
+  },
+  "output": {
+    "agentWorking": false,
+    "isDisconnected": true,
+    "isIdleConnected": false,
+    "isWorking": false,
+    "serviceConnected": false,
+    "status": "disconnected"
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "agentWorking": false,
+    "serviceConnected": true
+  },
+  "output": {
+    "agentWorking": false,
+    "isDisconnected": false,
+    "isIdleConnected": true,
+    "isWorking": false,
+    "serviceConnected": true,
+    "status": "idle"
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "agentWorking": true,
+    "serviceConnected": true
+  },
+  "output": {
+    "agentWorking": true,
+    "isDisconnected": false,
+    "isIdleConnected": false,
+    "isWorking": true,
+    "serviceConnected": true,
+    "status": "working"
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_fleet_service_activity_descriptor.test.mjs`.
