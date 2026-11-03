@@ -3818,3 +3818,75 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_external_fleet_effective_descriptor.test.mjs`.
+
+
+<!-- community-core:room-inventory-count-consistency-descriptor -->
+### Room Inventory Count Consistency Descriptor for Review
+
+Provides a small deterministic helper to compare a synthetic rooms totalConfigured claim against the declared items list length, letting the open pixel-office orchestration edition describe inventory match, missing, or extra states consistently without reading names, contacting backends, or dispatching agents. Computation is literal equality and ordering only with no inference about teams, floors, topology, or next steps. This module is independently tested; application and UI integration is outside this change.
+
+Reusable deterministic JSON core: `web-v2/src/community/room_inventory_count_consistency_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Date is unavailable and must not be used. Input must be a plain object with totalConfigured integer 0..10000 and items array with length 0..10000; elements are not inspected and extra properties on payload are ignored and input is never mutated. Any malformed shape, missing field, null payload, array payload, non-plain-object, non-integer or non-finite or out-of-range totalConfigured, non-array items or items length out of range throws TypeError('INVALID_ROOM_INVENTORY_COUNT_INPUT') without echoing input. On valid synthetic input return a fresh object with totalConfigured, itemCount, isMatch, isMissing, hasExtra where itemCount is items length, isMatch is true only when itemCount equals totalConfigured, isMissing is true only when itemCount is below totalConfigured, and hasExtra is true only when itemCount is above totalConfigured. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries or Object.values with Map get or set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function or builtin identifiers, no property assignment or update or delete, no Object.assign or create, no aliased builtins or callbacks, no prototype or constructor access. Computation is literal equality and ordering only and makes no inference about teams, floors, topology, roles, tasks, agents, states, progress, priority, health, causes, titles, commands, models or next steps and never contacts backends or agents. This module is independently tested; application and UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "items": [
+      {},
+      {}
+    ],
+    "totalConfigured": 2
+  },
+  "output": {
+    "hasExtra": false,
+    "isMatch": true,
+    "isMissing": false,
+    "itemCount": 2,
+    "totalConfigured": 2
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "items": [
+      {},
+      {}
+    ],
+    "totalConfigured": 3
+  },
+  "output": {
+    "hasExtra": false,
+    "isMatch": false,
+    "isMissing": true,
+    "itemCount": 2,
+    "totalConfigured": 3
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "items": [
+      {},
+      {},
+      {}
+    ],
+    "totalConfigured": 1
+  },
+  "output": {
+    "hasExtra": true,
+    "isMatch": false,
+    "isMissing": false,
+    "itemCount": 3,
+    "totalConfigured": 1
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_room_inventory_count_consistency_descriptor.test.mjs`.
