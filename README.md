@@ -95,3 +95,97 @@ Não publique credenciais, arquivos de ambiente reais, bancos, uploads ou dados 
 O código de titularidade autorizada é distribuído sob [MIT](LICENSE). A declaração **ISC do servidor** e suas condições são preservadas em [LICENSES/ISC-server.txt](LICENSES/ISC-server.txt). O frontend e recursos derivados de **Pixel Agents** mantêm a licença e os créditos; sprites baseados em **MetroCity** mantêm a atribuição CC0 do autor.
 
 Consulte [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) e [LICENSES/](LICENSES/) antes de redistribuir. O nome técnico e a URL existentes são mantidos para preservar imports, links e automações.
+
+
+<!-- community-core:lane-recovery-steps-size-descriptor -->
+### Lane Recovery Steps Size Descriptor for Plan Review
+
+Provides a small deterministic helper to summarize synthetic lane recovery plan sizes from OperationsLaneRecord recovery steps stubs, letting the open orchestration edition report plan verbosity consistently without reading step text, contacting backends, executing models or dispatching agents. It complements existing lane recovery progress, command recovery and escalation descriptors with literal array-length summation and min/max/average only and makes no inference about progress, causes or next steps. This module is independently tested; application and UI integration is outside this change.
+
+Reusable deterministic JSON core: `web-v2/src/community/lane_recovery_steps_size_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Date is unavailable and must not be used. Input must be a plain object with lanes array of synthetic stubs {steps}; extra properties on payload and on entries are ignored and input is never mutated. Each steps must be an array length 0..50 of strings each length 1..128 with valid Unicode without unpaired surrogates and no C0 control characters except LF/CR/TAB. Any null payload, array payload, non-plain-object payload, missing lanes, non-array lanes, length greater than 1000, non-plain-object entry, missing steps, non-array steps, steps length greater than 50, or missing/non-string/out-of-range/ill-formed step throws TypeError('INVALID_LANE_RECOVERY_STEPS_INPUT') without echoing input. On valid synthetic input return a fresh object with totalLanes, totalSteps, lanesWithSteps, lanesEmpty, maxSteps, minSteps, averageSteps, hasSteps, isEmpty where totalLanes is lanes length, totalSteps is sum of steps lengths, lanesWithSteps counts entries with steps length greater than zero, lanesEmpty is totalLanes minus lanesWithSteps, maxSteps is maximum steps length or zero when empty, minSteps is minimum steps length or zero when empty, averageSteps is totalSteps divided by totalLanes or zero when empty, hasSteps is totalSteps greater than zero, isEmpty is totalSteps strictly equals zero. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries or Object.values with Map get or set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function or builtin identifiers, no property assignment or update or delete, no Object.assign or create, no aliased builtins or callbacks, no prototype or constructor access. Computation is literal array-length summation and numeric comparison only and makes no inference about tasks, agents, lanes, rooms, providers, progress, health, causes or next steps and never contacts backends or agents. This module is independently tested; application and UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "lanes": [
+      {
+        "steps": [
+          "check",
+          "retry"
+        ]
+      },
+      {
+        "steps": []
+      },
+      {
+        "steps": [
+          "escalate"
+        ]
+      }
+    ]
+  },
+  "output": {
+    "averageSteps": 1,
+    "hasSteps": true,
+    "isEmpty": false,
+    "lanesEmpty": 1,
+    "lanesWithSteps": 2,
+    "maxSteps": 2,
+    "minSteps": 0,
+    "totalLanes": 3,
+    "totalSteps": 3
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "lanes": []
+  },
+  "output": {
+    "averageSteps": 0,
+    "hasSteps": false,
+    "isEmpty": true,
+    "lanesEmpty": 0,
+    "lanesWithSteps": 0,
+    "maxSteps": 0,
+    "minSteps": 0,
+    "totalLanes": 0,
+    "totalSteps": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "lanes": [
+      {
+        "steps": [
+          "a",
+          "b",
+          "c"
+        ]
+      }
+    ]
+  },
+  "output": {
+    "averageSteps": 3,
+    "hasSteps": true,
+    "isEmpty": false,
+    "lanesEmpty": 0,
+    "lanesWithSteps": 1,
+    "maxSteps": 3,
+    "minSteps": 3,
+    "totalLanes": 1,
+    "totalSteps": 3
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_lane_recovery_steps_size_descriptor.test.mjs`.
