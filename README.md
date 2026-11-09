@@ -189,3 +189,111 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_lane_recovery_steps_size_descriptor.test.mjs`.
+
+
+<!-- community-core:attention-execution-exclusivity-descriptor -->
+### Attention Execution Exclusivity Descriptor for Contract Review
+
+Provides a small deterministic helper to summarize synthetic attention task execution flag exclusivity from OperationsAttentionTask execution stubs, letting the open orchestration edition report clean versus idle versus conflicting running/preparing/queued combinations consistently without reading titles, contacting backends, executing models or dispatching agents. It complements existing attention queue-depth, waiting-share, severity and execution-activity descriptors with literal boolean counting only and makes no inference about health, causes or next steps. This module is independently tested; application and UI integration is outside this change.
+
+Reusable deterministic JSON core: `web-v2/src/community/attention_execution_exclusivity_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Date is unavailable and must not be used. Input must be a plain object with tasks array of synthetic stubs {execution:{running,preparing,queued}}; extra properties on payload, on entries and on execution objects are ignored and input is never mutated. Each execution must be a plain object with running, preparing and queued each strictly boolean. Any null payload, array payload, non-plain-object payload, missing tasks, non-array tasks, length greater than 1000, non-plain-object entry, missing execution, non-plain-object execution, or missing/non-boolean running, preparing or queued throws TypeError('INVALID_ATTENTION_EXECUTION_EXCLUSIVITY_INPUT') without echoing input. On valid synthetic input return a fresh object with totalTasks, cleanCount, idleCount, conflictCount, runningCount, preparingCount, queuedCount, hasConflict, isClean where totalTasks is tasks length, runningCount/preparingCount/queuedCount count entries with that flag strictly true, cleanCount counts entries with exactly one flag true, idleCount counts entries with zero flags true, conflictCount counts entries with more than one flag true, hasConflict is conflictCount greater than zero, isClean is conflictCount strictly equals zero. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries or Object.values with Map get or set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function or builtin identifiers, no property assignment or update or delete, no Object.assign or create, no aliased builtins or callbacks, no prototype or constructor access. Computation is literal boolean counting and numeric comparison only and makes no inference about tasks, agents, lanes, rooms, providers, progress, health, causes or next steps and never contacts backends or agents. This module is independently tested; application and UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "tasks": [
+      {
+        "execution": {
+          "preparing": false,
+          "queued": false,
+          "running": true
+        }
+      },
+      {
+        "execution": {
+          "preparing": false,
+          "queued": false,
+          "running": false
+        }
+      },
+      {
+        "execution": {
+          "preparing": false,
+          "queued": true,
+          "running": true
+        }
+      }
+    ]
+  },
+  "output": {
+    "cleanCount": 1,
+    "conflictCount": 1,
+    "hasConflict": true,
+    "idleCount": 1,
+    "isClean": false,
+    "preparingCount": 0,
+    "queuedCount": 1,
+    "runningCount": 2,
+    "totalTasks": 3
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "tasks": []
+  },
+  "output": {
+    "cleanCount": 0,
+    "conflictCount": 0,
+    "hasConflict": false,
+    "idleCount": 0,
+    "isClean": true,
+    "preparingCount": 0,
+    "queuedCount": 0,
+    "runningCount": 0,
+    "totalTasks": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "tasks": [
+      {
+        "execution": {
+          "preparing": true,
+          "queued": false,
+          "running": false
+        }
+      },
+      {
+        "execution": {
+          "preparing": false,
+          "queued": true,
+          "running": false
+        }
+      }
+    ]
+  },
+  "output": {
+    "cleanCount": 2,
+    "conflictCount": 0,
+    "hasConflict": false,
+    "idleCount": 0,
+    "isClean": true,
+    "preparingCount": 1,
+    "queuedCount": 1,
+    "runningCount": 0,
+    "totalTasks": 2
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_attention_execution_exclusivity_descriptor.test.mjs`.
