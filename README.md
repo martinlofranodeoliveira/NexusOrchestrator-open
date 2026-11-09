@@ -297,3 +297,103 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_attention_execution_exclusivity_descriptor.test.mjs`.
+
+
+<!-- community-core:room-floor-occupancy-descriptor -->
+### Room Floor Occupancy Descriptor for Capacity Review
+
+Provides a small deterministic helper to aggregate synthetic room floor load from OperationsRoomSummary floor and occupants stubs, letting the open orchestration edition report per-floor occupancy consistently without reading names, teams or descriptions, contacting backends, executing models or dispatching agents. It complements existing room floor, floor-spread, occupancy and capacity-load descriptors with literal group-by-floor summation and min/max/average only and makes no inference about progress, causes or next steps. This module is independently tested; application and UI integration is outside this change.
+
+Reusable deterministic JSON core: `web-v2/src/community/room_floor_occupancy_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Date is unavailable and must not be used. Input must be a plain object with rooms array of synthetic stubs {floor, occupants}; extra properties on payload and on entries are ignored and input is never mutated. Each floor must be an integer 0..200. Each occupants must be an integer 0..100000. Any null payload, array payload, non-plain-object payload, missing rooms, non-array rooms, length greater than 1000, non-plain-object entry, missing floor, non-integer/out-of-range floor, missing occupants, non-integer/out-of-range occupants throws TypeError('INVALID_ROOM_FLOOR_OCCUPANCY_INPUT') without echoing input. On valid synthetic input return a fresh object with totalRooms, distinctFloors, totalOccupants, maxFloorOccupants, minFloorOccupants, averageFloorOccupants, busiestFloor, quietestFloor, hasOccupants, isEmpty where totalRooms is rooms length, distinctFloors is number of distinct floor values, totalOccupants is sum of occupants, maxFloorOccupants is maximum per-floor summed occupants or zero when empty, minFloorOccupants is minimum per-floor summed occupants or zero when empty, averageFloorOccupants is totalOccupants divided by distinctFloors or zero when empty, busiestFloor is floor with maximum summed occupants with lowest floor on ties or null when empty, quietestFloor is floor with minimum summed occupants with lowest floor on ties or null when empty, hasOccupants is totalOccupants greater than zero, isEmpty is totalOccupants strictly equals zero. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries or Object.values with Map get or set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function or builtin identifiers, no property assignment or update or delete, no Object.assign or create, no aliased builtins or callbacks, no prototype or constructor access. Computation is literal integer grouping, summation and numeric comparison only and makes no inference about tasks, agents, lanes, rooms, providers, progress, health, causes or next steps and never contacts backends or agents. This module is independently tested; application and UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "rooms": [
+      {
+        "floor": 0,
+        "occupants": 2
+      },
+      {
+        "floor": 1,
+        "occupants": 3
+      },
+      {
+        "floor": 0,
+        "occupants": 1
+      }
+    ]
+  },
+  "output": {
+    "averageFloorOccupants": 3,
+    "busiestFloor": 0,
+    "distinctFloors": 2,
+    "hasOccupants": true,
+    "isEmpty": false,
+    "maxFloorOccupants": 3,
+    "minFloorOccupants": 3,
+    "quietestFloor": 0,
+    "totalOccupants": 6,
+    "totalRooms": 3
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "rooms": []
+  },
+  "output": {
+    "averageFloorOccupants": 0,
+    "busiestFloor": null,
+    "distinctFloors": 0,
+    "hasOccupants": false,
+    "isEmpty": true,
+    "maxFloorOccupants": 0,
+    "minFloorOccupants": 0,
+    "quietestFloor": null,
+    "totalOccupants": 0,
+    "totalRooms": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "rooms": [
+      {
+        "floor": 2,
+        "occupants": 0
+      },
+      {
+        "floor": 2,
+        "occupants": 5
+      },
+      {
+        "floor": 3,
+        "occupants": 1
+      }
+    ]
+  },
+  "output": {
+    "averageFloorOccupants": 3,
+    "busiestFloor": 2,
+    "distinctFloors": 2,
+    "hasOccupants": true,
+    "isEmpty": false,
+    "maxFloorOccupants": 5,
+    "minFloorOccupants": 1,
+    "quietestFloor": 3,
+    "totalOccupants": 6,
+    "totalRooms": 3
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_room_floor_occupancy_descriptor.test.mjs`.
