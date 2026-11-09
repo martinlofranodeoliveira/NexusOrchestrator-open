@@ -493,3 +493,101 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_lane_packet_requester_descriptor.test.mjs`.
+
+
+<!-- community-core:lane-failure-consistency-descriptor -->
+### Lane Failure Consistency Descriptor for Review
+
+Provides a small deterministic helper to summarize synthetic lane failure-class agreement across OperationsLaneRecord lane, recovery and event layers, letting the open orchestration edition report clean versus consistently classified versus mismatched lanes consistently without reading messages, contacting backends, executing models or dispatching agents. It complements existing lane failure-presence, event failure-count, retry, load, packet-requester and recovery descriptors with literal null-versus-string collection and string-equality distinct-value counting only and makes no inference about progress, health, causes or next steps. This module is independently tested; application and UI integration is outside this change.
+
+Reusable deterministic JSON core: `web-v2/src/community/lane_failure_consistency_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Date is unavailable and must not be used. Input must be a plain object with lanes array of synthetic stubs with failureClass, recoveryFailureClass and eventFailureClasses; extra properties on payload and on entries are ignored and input is never mutated. Each failureClass and each recoveryFailureClass must be null or a string length 1..128 with valid Unicode without unpaired surrogates and no C0 control characters except LF/CR/TAB. Each eventFailureClasses must be an array length 0..50 where each item is null or a string length 1..128 with valid Unicode without unpaired surrogates and no C0 control characters except LF/CR/TAB. Any null payload, array payload, non-plain-object payload, missing lanes, non-array lanes, length greater than 1000, non-plain-object entry, missing failureClass, missing recoveryFailureClass, missing eventFailureClasses, non-array eventFailureClasses, eventFailureClasses length greater than 50, or missing or non-null-non-string or out-of-range or ill-formed failureClass, recoveryFailureClass or event item throws TypeError('INVALID_LANE_FAILURE_CONSISTENCY_INPUT') without echoing input. On valid synthetic input return a fresh object with totalLanes, cleanLanes, consistentLanes, mismatchedLanes, hasFailure, hasMismatch, isClean and isConsistent where totalLanes is lanes length, cleanLanes counts entries with zero non-null failure strings across failureClass, recoveryFailureClass and eventFailureClasses, consistentLanes counts entries with at least one string and all strings strictly equal, mismatchedLanes is totalLanes minus cleanLanes minus consistentLanes, hasFailure is cleanLanes less than totalLanes, hasMismatch is mismatchedLanes greater than zero, isClean is cleanLanes strictly equals totalLanes, isConsistent is mismatchedLanes strictly equals zero. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries or Object.values with Map get or set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function or builtin identifiers, no property assignment or update or delete, no Object.assign or create, no aliased builtins or callbacks, no prototype or constructor access. Computation is literal null collection and strict string-equality distinct-value counting only and makes no inference about tasks, agents, lanes, rooms, providers, progress, health, causes or next steps and never contacts backends or agents. This module is independently tested; application and UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "lanes": [
+      {
+        "eventFailureClasses": [
+          "timeout",
+          null
+        ],
+        "failureClass": "timeout",
+        "recoveryFailureClass": "timeout"
+      },
+      {
+        "eventFailureClasses": [],
+        "failureClass": null,
+        "recoveryFailureClass": null
+      },
+      {
+        "eventFailureClasses": [
+          null
+        ],
+        "failureClass": "timeout",
+        "recoveryFailureClass": "auth"
+      }
+    ]
+  },
+  "output": {
+    "cleanLanes": 1,
+    "consistentLanes": 1,
+    "hasFailure": true,
+    "hasMismatch": true,
+    "isClean": false,
+    "isConsistent": false,
+    "mismatchedLanes": 1,
+    "totalLanes": 3
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "lanes": []
+  },
+  "output": {
+    "cleanLanes": 0,
+    "consistentLanes": 0,
+    "hasFailure": false,
+    "hasMismatch": false,
+    "isClean": true,
+    "isConsistent": true,
+    "mismatchedLanes": 0,
+    "totalLanes": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "lanes": [
+      {
+        "eventFailureClasses": [
+          null,
+          "io"
+        ],
+        "failureClass": null,
+        "recoveryFailureClass": "io"
+      }
+    ]
+  },
+  "output": {
+    "cleanLanes": 0,
+    "consistentLanes": 1,
+    "hasFailure": true,
+    "hasMismatch": false,
+    "isClean": false,
+    "isConsistent": true,
+    "mismatchedLanes": 0,
+    "totalLanes": 1
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_lane_failure_consistency_descriptor.test.mjs`.
