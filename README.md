@@ -397,3 +397,99 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_room_floor_occupancy_descriptor.test.mjs`.
+
+
+<!-- community-core:lane-packet-requester-descriptor -->
+### Lane Packet Requester Descriptor for Coordination Review
+
+Provides a small deterministic helper to summarize synthetic lane collaboration packet requester attachment from OperationsLaneRecord packet/requestedBy stubs, letting the open orchestration edition report packet-bearing versus bare lanes and requested versus unrequested packets consistently without reading phase, scope or requester identities, contacting backends, executing models or dispatching agents. It complements existing lane failure-presence, retry, load, event and recovery descriptors with literal null-versus-plain-object counting only and makes no inference about progress, health, causes or next steps. This module is independently tested; application and UI integration is outside this change.
+
+Reusable deterministic JSON core: `web-v2/src/community/lane_packet_requester_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Date is unavailable and must not be used. Input must be a plain object with lanes array of synthetic stubs {packet}; extra properties on payload, on entries, on packet objects and on requestedBy objects are ignored and input is never mutated. Each entry must be a plain object with packet present; each packet must be null or a plain object; when packet is a plain object it must have requestedBy present which must be null or a plain object. Any null payload, array payload, non-plain-object payload, missing lanes, non-array lanes, length greater than 1000, non-plain-object entry, missing packet, non-null-non-plain-object packet, missing requestedBy on packet objects, or non-null-non-plain-object requestedBy throws TypeError('INVALID_LANE_PACKET_REQUESTER_INPUT') without echoing input. On valid synthetic input return a fresh object with totalLanes, withPacket, withoutPacket, withRequester, packetWithoutRequester, hasPacket, hasRequester, isBare where totalLanes is lanes length, withPacket counts entries with packet as plain object, withoutPacket is totalLanes minus withPacket, withRequester counts entries with packet as plain object and requestedBy as plain object, packetWithoutRequester is withPacket minus withRequester, hasPacket is withPacket greater than zero, hasRequester is withRequester greater than zero, isBare is withPacket strictly equals zero. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries or Object.values with Map get or set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function or builtin identifiers, no property assignment or update or delete, no Object.assign or create, no aliased builtins or callbacks, no prototype or constructor access. Computation is literal null-versus-plain-object presence counting with subtraction and comparison only and makes no inference about tasks, agents, lanes, rooms, providers, progress, health, causes or next steps and never contacts backends or agents. This module is independently tested; application and UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "lanes": [
+      {
+        "packet": null
+      },
+      {
+        "packet": {
+          "requestedBy": null
+        }
+      },
+      {
+        "packet": {
+          "requestedBy": {
+            "id": "u1",
+            "name": "Ada"
+          }
+        }
+      }
+    ]
+  },
+  "output": {
+    "hasPacket": true,
+    "hasRequester": true,
+    "isBare": false,
+    "packetWithoutRequester": 1,
+    "totalLanes": 3,
+    "withPacket": 2,
+    "withRequester": 1,
+    "withoutPacket": 1
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "lanes": []
+  },
+  "output": {
+    "hasPacket": false,
+    "hasRequester": false,
+    "isBare": true,
+    "packetWithoutRequester": 0,
+    "totalLanes": 0,
+    "withPacket": 0,
+    "withRequester": 0,
+    "withoutPacket": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "lanes": [
+      {
+        "note": "x",
+        "packet": {
+          "phase": "review",
+          "requestedBy": {
+            "id": "u9",
+            "name": "Bo"
+          }
+        }
+      }
+    ]
+  },
+  "output": {
+    "hasPacket": true,
+    "hasRequester": true,
+    "isBare": false,
+    "packetWithoutRequester": 0,
+    "totalLanes": 1,
+    "withPacket": 1,
+    "withRequester": 1,
+    "withoutPacket": 0
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_lane_packet_requester_descriptor.test.mjs`.
