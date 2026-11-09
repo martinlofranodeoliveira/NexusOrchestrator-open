@@ -591,3 +591,79 @@ Examples (JSON input and expected output):
 ```
 
 Public regression tests: `lab_tests/community_lane_failure_consistency_descriptor.test.mjs`.
+
+
+<!-- community-core:attention-title-accessibility-descriptor -->
+### Attention Title Accessibility Descriptor for Content Review
+
+Provides a small deterministic helper to summarize synthetic attention task title label accessibility from OperationsAttentionTask title stubs, letting the open orchestration edition report blank versus labeled titles consistently without reading status or severity, contacting backends, executing models or dispatching agents. It complements existing attention assignment-gap, severity, queue-depth, waiting-share and execution descriptors with literal empty-or-whitespace-only detection only and makes no inference about health, causes or next steps. This module is independently tested; application and UI integration is outside this change.
+
+Reusable deterministic JSON core: `web-v2/src/community/attention_title_accessibility_descriptor.mjs`, API `runFeature(payload)`. This module is independently tested; application/UI integration is outside this change.
+
+Export pure function runFeature(payload) with no I/O, env, processes, time, randomness, callbacks, imports, classes, async, this, reflection, mutable module variables or dependencies. Date is unavailable and must not be used. Input must be a plain object with tasks array of synthetic stubs {title}; extra properties on payload and on entries are ignored and input is never mutated. Each title must be a string length 0..128 with valid Unicode without unpaired surrogates and no C0 control characters except LF/CR/TAB. Any null payload, array payload, non-plain-object payload, missing tasks, non-array tasks, length greater than 1000, non-plain-object entry, missing title, or non-string/out-of-range/ill-formed title throws TypeError('INVALID_ATTENTION_TITLE_ACCESSIBILITY_INPUT') without echoing input. On valid synthetic input return a fresh object with totalTasks, labeledCount, blankCount, hasBlank, isAccessible where totalTasks is tasks length, blankCount counts entries with title empty or containing only space/TAB/LF/CR, labeledCount is totalTasks minus blankCount, hasBlank is blankCount greater than zero, isAccessible is blankCount strictly equals zero. Build results only with object literals or Object.fromEntries, arrays with push and maps with set where needed, use only for-of and Object.entries or Object.values with Map get or set, allow computed access only for literal nonnegative numeric indices, no dynamic computed access, no reassignment of function or builtin identifiers, no property assignment or update or delete, no Object.assign or create, no aliased builtins or callbacks, no prototype or constructor access. Computation is literal empty-or-whitespace-only title detection and numeric comparison only and makes no inference about tasks, agents, lanes, rooms, providers, progress, health, causes or next steps and never contacts backends or agents. This module is independently tested; application and UI integration is outside this change.
+
+Examples (JSON input and expected output):
+
+```json
+{
+  "input": {
+    "tasks": [
+      {
+        "title": "Review lane"
+      },
+      {
+        "title": ""
+      },
+      {
+        "title": "   "
+      }
+    ]
+  },
+  "output": {
+    "blankCount": 2,
+    "hasBlank": true,
+    "isAccessible": false,
+    "labeledCount": 1,
+    "totalTasks": 3
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "tasks": []
+  },
+  "output": {
+    "blankCount": 0,
+    "hasBlank": false,
+    "isAccessible": true,
+    "labeledCount": 0,
+    "totalTasks": 0
+  }
+}
+```
+
+```json
+{
+  "input": {
+    "tasks": [
+      {
+        "title": "Triage"
+      },
+      {
+        "title": "Escalate\nReview"
+      }
+    ]
+  },
+  "output": {
+    "blankCount": 0,
+    "hasBlank": false,
+    "isAccessible": true,
+    "labeledCount": 2,
+    "totalTasks": 2
+  }
+}
+```
+
+Public regression tests: `lab_tests/community_attention_title_accessibility_descriptor.test.mjs`.
